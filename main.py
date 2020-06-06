@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 
@@ -49,53 +48,24 @@ def clean_labels(labels):
 
 def get_unique_values(df, feature):
 	return pd.unique(df.explode(feature)[feature])
+
+
+def keep_n_features(df, feature='labels', n=.001):
+	min_presence = int(n * len(df))
 	
+	features_count = df.explode(feature)[feature].value_counts()
+	n_features = features_count.where(features_count.values >= min_presence).dropna()
+	
+	return n_features.keys().values, n_features.values
 
 
 
-
-# load or download raw dataset
+# load dataset
+# pass 'fetch=True' to download from scratch
 github_df = load_github_data()
 
-unique_labels = get_unique_values(github_df, 'labels')
-
-print(unique_labels.shape)
-
-
-
-'''
-############################################
-
-test = github_df.explode('labels')['labels'].value_counts()
-
-counter = 0
-min_count = 1000
-
-for t in test.values:
-	if t > min_count:
-		counter += 1
-
-print(len(github_df))
-print(max(test.values))
-print()
-print(f'{len(test.values)} ---> {counter}')
-
-############################################
-
-
-labels_df = pd.DataFrame()
-
-for label in unique_labels[:10]:
-	labels_df[label] = pd.Series(np.zeros(len(github_df)))
-
-
-print(labels_df.shape)
-print(labels_df.columns.values)
-'''
-
-
-
-# print(github_df.columns.values)
+labels, _ = keep_n_features(github_df)
+print(labels)
 
 
 
