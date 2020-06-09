@@ -8,7 +8,6 @@ class MemoryLimit:
 		self.apply = True
 		self.value = 20
 
-
 MEMORY_LIMIT = MemoryLimit()
 
 
@@ -101,7 +100,7 @@ labels, _ = min_presence(github_df, p=.1)
 labels_df = assign(github_df['labels'], labels)
 
 
-# start NLP
+# start NLP (TO DO)
 title_df = github_df['title']
 body_df = github_df['body']
 
