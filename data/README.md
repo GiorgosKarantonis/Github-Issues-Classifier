@@ -1,1 +1,1 @@
-Put the datasets in this folder.
+This folder is used to store and load the datasets.
