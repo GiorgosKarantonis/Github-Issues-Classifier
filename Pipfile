@@ -8,6 +8,8 @@ verify_ssl = true
 [packages]
 numpy = "*"
 pandas = "*"
+nltk = "*"
+gensim = "*"
 
 [requires]
 python_version = "3.6"
