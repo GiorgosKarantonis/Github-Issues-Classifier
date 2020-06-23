@@ -7,9 +7,9 @@ from nltk import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 
-import nltk
-nltk.download('stopwords')
-nltk.download('wordnet')
+# import nltk
+# nltk.download('stopwords')
+# nltk.download('wordnet')
 
 
 
@@ -19,12 +19,12 @@ MEMORY_LIMIT = None
 
 
 
-def download_data(memory_limit=None, save_dataset=True, base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
+def download_data(memory_limit=None, save=True, base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
 	print('\nDownloading Dataset...')
 
 	df = pd.concat([pd.read_csv(f'{base_url}{i}.csv.gz') for i in range(10)])[:memory_limit]
 
-	if save_dataset:
+	if save:
 		df.to_pickle('data/github_raw.pkl')
 
 	return df
@@ -74,12 +74,16 @@ def get_reference_info(df):
 	return df
 
 
+def get_unique_values(df, feature):
+	return df.explode(feature)[feature].value_counts()
+
+
 def min_presence(df, feature='labels', p=.001):
 	print('\nFiltering out Reduntant Labels...')
 
 	thresh = int(p * len(df))
 	
-	features_count = df.explode(feature)[feature].value_counts()
+	features_count = get_unique_values(df, feature)
 	n_features = features_count.where(features_count.values >= thresh).dropna()
 	
 	return n_features.keys().values, n_features.values
@@ -151,7 +155,7 @@ def transform(df, **kwargs):
 	return df
 
 
-def preprocess(df):
+def preprocess(df, save=True):
 	# clean 'url' column
 	df['url'] = df['url'].str.replace('"', '')
 
@@ -176,10 +180,14 @@ def preprocess(df):
 	# normalize the textual features
 	df = text_preprocessing(df, 'title', 'body')
 
+	if save:
+		# save cleaned dataframe
+		df.to_pickle('data/github.pkl')
+
 	return df
 
 
-def fetch_data(look_for_downloaded=True, memory_limit=None, base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
+def fetch_github_data(look_for_downloaded=True, memory_limit=None, base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
 	if look_for_downloaded:
 		try:
 			df = pd.read_pickle('data/github_raw.pkl')[:memory_limit]
@@ -188,20 +196,21 @@ def fetch_data(look_for_downloaded=True, memory_limit=None, base_url='https://st
 	else:
 		df = download_data(memory_limit=memory_limit, base_url=base_url)[:memory_limit]
 
-	# process the raw dataframe
-	df = preprocess(df)
-
-	# save cleaned dataframe
-	df.to_pickle('data/github.pkl')
-
 	return df
 
 
-def load_github_data(fetch=False, memory_limit=None, base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
-	return fetch_data(memory_limit=memory_limit, base_url=base_url) if fetch else pd.read_pickle('data/github.pkl')[:memory_limit]
+def load_data(fetch=False, memory_limit=None, file='data/github.pkl', base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
+	return fetch_github_data(memory_limit=memory_limit, base_url=base_url) if fetch else pd.read_pickle(file)[:memory_limit]
 
 
 
 if __name__ == '__main__':
 	# load the preprocessed dataset or set 'FETCH=True' to download from scratch
 	github_df = load_github_data(fetch=FETCH, memory_limit=MEMORY_LIMIT)
+	
+	# process the raw dataframe
+	github_df = preprocess(df)
+
+	
+
+

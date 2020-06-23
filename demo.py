@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from preprocess import text_preprocessing
+from preprocessing import text_preprocessing
 
 
 
@@ -61,3 +61,6 @@ print(f'{df_raw_small.body.head(1).values}')
 
 print('\n\n\nSAMPLE BODY AFTER PREPROCESSING\n')
 print(f'{df_small.body.head(1).values}')
+
+
+
