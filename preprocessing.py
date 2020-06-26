@@ -178,7 +178,7 @@ def preprocess(df, save=True):
 	df = transform(df, to_add=[labels_df])
 
 	# normalize the textual features
-	df = text_preprocessing(df, 'title', 'body')
+	# df = text_preprocessing(df, 'title', 'body')
 
 	if save:
 		# save cleaned dataframe
@@ -206,10 +206,10 @@ def load_data(fetch=False, memory_limit=None, file='data/github.pkl', base_url='
 
 if __name__ == '__main__':
 	# load the preprocessed dataset or set 'FETCH=True' to download from scratch
-	github_df = load_github_data(fetch=FETCH, memory_limit=MEMORY_LIMIT)
+	github_df = load_data(fetch=FETCH, memory_limit=MEMORY_LIMIT)
 	
 	# process the raw dataframe
-	github_df = preprocess(df)
+	github_df = preprocess(github_df)
 
 	
 

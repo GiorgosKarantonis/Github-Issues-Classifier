@@ -3,8 +3,6 @@ import math
 import pandas as pd
 import numpy as np
 
-from nltk import word_tokenize, edit_distance
-
 import preprocessing as pp
 
 import gensim
@@ -14,7 +12,7 @@ import gensim
 MEMORY_LIMIT = 1000
 TRIGGER_CHARS = ['/', '-', ':', ' ']
 
-LABELS = [
+LABELS = labels[
 	'bug', 
 	'enhancement', 
 	'documentation', 
@@ -98,57 +96,3 @@ for data_l in labels.values:
 	l_dict[data_l] = best_match
 
 
-
-'''
-l_dict = {}
-for data_l in labels.values:
-	best_match = None
-	max_similarity = math.inf
-	
-	for target_l in LABELS:
-		cur_similarity = edit_distance(data_l, target_l)
-
-		if cur_similarity < max_similarity:
-			max_similarity = cur_similarity
-			best_match = target_l
-
-
-	print(f'{data_l}\n{best_match}\n{max_similarity}\n\n\n')
-	l_dict[data_l] = best_match
-
-'''
-'''
-one_words_list = labels.str.extract(r'^([a-zA-Z]+)$').dropna().values[:, 0]
-one_words_dict = {w : [] for w in one_words_list}
-
-for l in labels:
-	for w in one_words_list:
-		save = False
-
-		if w in l:
-			for c in TRIGGER_CHARS:
-				if c in l:
-					save = True
-
-
-			if save:
-				one_words_dict[w].append(l)
-
-
-
-my_dict2 = {}
-for label, syn_list in one_words_dict.items():
-	for syn in syn_list:
-		try:
-			my_dict2[syn].append(label)
-		except KeyError:
-			my_dict2[syn] = [label]
-
-
-
-for elem in my_dict2:
-	print(f'{elem}: {my_dict2[elem]}')
-
-print()
-print()
-'''
