@@ -1,15 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from string import punctuation
-
-from nltk import word_tokenize
+from nltk import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer, WordNetLemmatizer
-
-# import nltk
-# nltk.download('stopwords')
-# nltk.download('wordnet')
+from nltk.stem import PorterStemmer
 
 
 
@@ -20,7 +14,7 @@ MEMORY_LIMIT = None
 
 
 def download_data(memory_limit=None, save=True, base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
-	print('\nDownloading Dataset...')
+	print('Downloading Dataset...\n')
 
 	df = pd.concat([pd.read_csv(f'{base_url}{i}.csv.gz') for i in range(10)])[:memory_limit]
 
@@ -31,7 +25,7 @@ def download_data(memory_limit=None, save=True, base_url='https://storage.google
 	
 
 def drop_columns(df, *columns):
-	print('\nRemoving Reduntant Columns...')
+	print('Removing Reduntant Columns...\n')
 
 	for c in columns:
 		try:
@@ -44,7 +38,7 @@ def drop_columns(df, *columns):
 
 
 def clean_labels(labels):
-	print('\nCleaning Labels...')
+	print('Cleaning Labels...\n')
 
 	labels_fixed = []
 
@@ -65,7 +59,7 @@ def clean_labels(labels):
 
 
 def get_reference_info(df):
-	print('\nGetting Issue Info...')
+	print('Getting Issue Info...\n')
 
 	reference_df = df['url'].str.extract(r'.*github\.com/(?P<user>.+)/(?P<repo_name>.+)/issues/(?P<issue_number>\d+)')
 
@@ -79,7 +73,7 @@ def get_unique_values(df, feature):
 
 
 def min_presence(df, feature='labels', p=.001):
-	print('\nFiltering out Reduntant Labels...')
+	print('Filtering out Reduntant Labels...\n')
 
 	thresh = int(p * len(df))
 	
@@ -90,7 +84,7 @@ def min_presence(df, feature='labels', p=.001):
 
 
 def vectorize(s, values, prefix=None):
-	print('\nVectorizing Features...')
+	print('Vectorizing Features...\n')
 
 	series_length = len(s)
 	labels_df = pd.DataFrame(np.zeros((len(s), len(values))), columns=values)
@@ -107,36 +101,39 @@ def vectorize(s, values, prefix=None):
 	return labels_df
 
 
-def text_preprocessing(df, *text_features, lemmatize=False, stem=True):
-	print('\nProcessing Text Data...')
+def text_preprocessing(df, *features):
+	print('Processing Text Data...\n')
 
-	n_features = len(text_features)
+	for i, feature in enumerate(features):
+		# remove carriage return and convert to lowercase
+		df[feature] = df[feature].str.replace(r'\\r', '').str.lower()
 
-	for i, feature in enumerate(text_features):
-		print(f'\tConverting to Lowercase Feature: {i+1} / {n_features}\r', end='')
-		df[feature] = df[feature].str.lower()
+		# tokenize
+		try:
+			df[feature] = df[feature].apply(word_tokenize)
+		except LookupError:
+			nltk.download('punkt')
+			df[feature] = df[feature].apply(word_tokenize)
 
-		# df[feature] = df[feature].str.decode('unicode_escape')
+		# remove stop words and noise
+		try:
+			df[feature] = [[word for word in issue if word not in stopwords.words('english') and word.isalpha()] for issue in df[feature]]
+		except LookupError:
+			nltk.download('stopwords')
+			df[feature] = [[word for word in issue if word not in stopwords.words('english') and word.isalpha()] for issue in df[feature]]
 
-		print(f'\tTokenizing Feature: {i+1} / {n_features}\r', end='')
-		df[feature] = df[feature].apply(word_tokenize)
-
-		print(f'\tRemoving Stopwords Feature: {i+1} / {n_features}\r', end='')
-		df[feature] = [[word for word in issue if word not in stopwords.words('english') and word not in punctuation] for issue in df[feature]]
-		
-		if lemmatize:
-			print(f'\tLemmatizing Feature: {i+1} / {n_features}\r', end='')
-			df[feature] = [' '.join([WordNetLemmatizer().lemmatize(word) for word in issue]) for issue in df[feature]]
-		
-		if stem:
-			print(f'\tStemming Feature: {i+1} / {n_features}\r', end='')
-			df[feature] = [' '.join([PorterStemmer().stem(word) for word in issue]) for issue in df[feature]]
+		# stem the tokens
+		try:
+			df[feature] = [[PorterStemmer().stem(word) for word in issue] for issue in df[feature]]
+		except LookupError:
+			nltk.download('wordnet')
+			df[feature] = [[PorterStemmer().stem(word) for word in issue] for issue in df[feature]]
 
 	return df
 
 
 def transform(df, **kwargs):
-	print('\nTransforming DataFrame...')
+	print('Transforming DataFrame...\n')
 
 	try:
 		for feature in kwargs['to_add']:
