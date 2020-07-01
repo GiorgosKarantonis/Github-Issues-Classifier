@@ -2,3 +2,4 @@
 *.DS_Store
 *.png
 *.bin
+__pycache__
