@@ -10,6 +10,8 @@ numpy = "*"
 pandas = "*"
 nltk = "*"
 gensim = "*"
+transformers = "*"
+tensorflow = "*"
 
 [requires]
 python_version = "3.8"
