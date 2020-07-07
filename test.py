@@ -8,13 +8,16 @@ from transformers import DistilBertConfig
 from transformers import DistilBertTokenizer, DistilBertTokenizerFast
 from transformers import TFDistilBertModel, TFDistilBertForSequenceClassification
 
+from transformers import BertTokenizer, TFBertForSequenceClassification
+
 import time
+import itertools
 
 
 
 MEMORY_LIMIT = 100	# set to None if you don't want to apply any limit
 
-LABELS = [
+EXAMPLE_LABELS = [
 	'bug', 
 	'enhancement', 
 	'documentation', 
@@ -38,55 +41,54 @@ LABELS = [
 	'priority: critical'
 ]
 
+LABELS = [
+	'bug', 
+	'enhancement', 
+	'question'
+]
+
+
+
+def get_paraphrased_values(inputs):
+	tokenizer = BertTokenizer.from_pretrained('bert-base-cased-finetuned-mrpc')
+	model = TFBertForSequenceClassification.from_pretrained('bert-base-cased-finetuned-mrpc')
+
+	inputs = tokenizer(	inputs, 
+						padding=True, 
+						truncation=True, 
+						return_tensors='tf')
+
+	logits = model(inputs)[0]
+	outputs = tf.nn.softmax(logits, axis=1).numpy()
+
+	not_paraphrase_likelihood = outputs[:, 0]
+	paraphrase_likelihood = outputs[:, 1]
+
+	return not_paraphrase_likelihood, paraphrase_likelihood
+
 
 
 df = pp.load_data(memory_limit=MEMORY_LIMIT)
-labels = [df[c] for c in df if c.startswith('label_')]
+# labels = [df[c] for c in df if c.startswith('label_')]
+
+unique_labels = pp.get_unique_values(df, 'labels').keys().values
+combinations = np.array(list(itertools.combinations(unique_labels, 2))).tolist()
+_, paraphrase_likelihood = get_paraphrased_values(combinations)
+
+for i, pair in enumerate(combinations):
+	if paraphrase_likelihood[i] > .8:
+		print(f'{pair[0]}\t{pair[1]}\t\t{paraphrase_likelihood[i]}')
 
 
-
-# Detect Similar labels
-tokenizer = BertTokenizer.from_pretrained('bert-base-cased-finetuned-mrpc')
-model = TFBertForSequenceClassification.from_pretrained('bert-base-cased-finetuned-mrpc')
-
-classes = ["not paraphrase", "is paraphrase"]
-
-l_1 = "bug"
-l_2 = "enhancement"
-l_3 = "type: bug"
-
-paraphrase = tokenizer(l_1, l_3, return_tensors="tf")
-not_paraphrase = tokenizer(l_1, l_2, return_tensors="tf")
-
-paraphrase_classification_logits = model(paraphrase)[0]
-not_paraphrase_classification_logits = model(not_paraphrase)[0]
-
-paraphrase_results = tf.nn.softmax(paraphrase_classification_logits, axis=1).numpy()[0]
-not_paraphrase_results = tf.nn.softmax(not_paraphrase_classification_logits, axis=1).numpy()[0]
-
-# Should be paraphrase
-for i in range(len(classes)):
-	print(f"{classes[i]}: {paraphrase_results[i]}")
-print()
-# Should not be paraphrase
-for i in range(len(classes)):
-	print(f"{classes[i]}: {not_paraphrase_results[i]}")
-
-
+# for c in df.columns:
+# 	if c.startswith('label_') and c.strip('label_') not in LABELS:
+# 		df = df.drop(c, axis=1)
 
 
 # start = time.time()
 
-# # Check here for multi-label classification
-# # https://medium.com/huggingface/multi-label-text-classification-using-bert-the-mighty-transformer-69714fa3fb3d
-# # https://github.com/huggingface/transformers/issues/1465
-# # https://towardsdatascience.com/multi-label-classification-using-bert-roberta-xlnet-xlm-and-distilbert-with-simple-transformers-b3e0cda12ce5
-
-
-# configuration = DistilBertConfig(num_labels=len(labels))
-
 # tokenizer = DistilBertTokenizerFast.from_pretrained('distilbert-base-uncased')
-# model = TFDistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', config=configuration)
+# model = TFDistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased')
 
 
 # # inputs_title = tokenizer(	df['title'].values.tolist(), 
