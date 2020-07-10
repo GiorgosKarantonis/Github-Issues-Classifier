@@ -5,6 +5,7 @@ from nltk import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
+import tensorflow as tf
 from transformers import BertTokenizer, TFBertForSequenceClassification
 
 
