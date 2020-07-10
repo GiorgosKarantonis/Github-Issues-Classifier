@@ -5,11 +5,7 @@ from nltk import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
-
-
-# define the hyperparameters
-FETCH = True
-MEMORY_LIMIT = None
+from transformers import BertTokenizer, TFBertForSequenceClassification
 
 
 
@@ -101,13 +97,17 @@ def vectorize(s, values, prefix=None):
 	return labels_df
 
 
+def clean_text_data(df, *features):
+	for feature in features:
+		df[feature] = df[feature].str.replace(r'\\r', '').str.lower()
+
+	return df
+
+
 def text_preprocessing(df, *features):
 	print('Processing Text Data...\n')
 
 	for i, feature in enumerate(features):
-		# remove carriage return and convert to lowercase
-		df[feature] = df[feature].str.replace(r'\\r', '').str.lower()
-
 		# tokenize
 		try:
 			df[feature] = df[feature].apply(word_tokenize)
@@ -130,6 +130,80 @@ def text_preprocessing(df, *features):
 			df[feature] = [[PorterStemmer().stem(word) for word in issue] for issue in df[feature]]
 
 	return df
+
+
+def make_combinations(target, observed):
+	combinations = []
+	
+	for t in target:
+	    for o in observed:
+	        combinations.append([t, o])
+
+	return combinations
+
+
+def check_paraphrase(inputs):
+	tokenizer = BertTokenizer.from_pretrained('bert-base-cased-finetuned-mrpc')
+	model = TFBertForSequenceClassification.from_pretrained('bert-base-cased-finetuned-mrpc')
+
+	inputs = tokenizer(	inputs, 
+						padding=True, 
+						truncation=True, 
+						return_tensors='tf')
+
+	logits = model(inputs)[0]
+	outputs = tf.nn.softmax(logits, axis=1).numpy()
+
+	not_paraphrase_likelihood = outputs[:, 0]
+	paraphrase_likelihood = outputs[:, 1]
+
+	return not_paraphrase_likelihood, paraphrase_likelihood
+
+
+def disambiguate_labels(labels_dict, disambiguate='keep_most_probable'):
+	# can use threshold here instead of the next cell
+    assert disambiguate in ['keep_most_probable', 'drop_all']
+
+    cleaned_dict = {}
+
+    for key in labels_dict:
+        if len(labels_dict[key]) > 1:
+            if disambiguate == 'drop_all':
+                cleaned_dict[key] = None
+            else:
+                max_likelihood = 0
+                best_match = None
+
+                for label, likelihood in labels_dict[key]:
+                    if likelihood > max_likelihood:
+                        max_likelihood = likelihood
+                        best_match = label
+                
+                cleaned_dict[key] = best_match
+        else:
+            label, likelihood = labels_dict[key][0]
+            cleaned_dict[key] = label
+    
+    return cleaned_dict
+
+
+def map_labels(label_series, mapping):
+	for i, label_list in enumerate(label_series):
+	    
+	    temp_labels = []
+	    for l in label_list:
+	        try:
+	            temp_labels.append(mapping[l])
+	        except:
+	            pass
+	    
+	    if temp_labels:
+	        mapped_labels.append(temp_labels)
+	    else:
+	        mapped_labels.append(['undefined'])
+
+
+	return pd.Series(mapped_labels)
 
 
 def transform(df, **kwargs):
@@ -160,7 +234,7 @@ def preprocess(df, save=True):
 	df = get_reference_info(df)
 
 	# drop redundant columns
-	df = drop_columns(df, 'num_labels', 'c_bug', 'c_feature', 'c_question', 'class_int')
+	df = drop_columns(df, 'repo', 'num_labels', 'c_bug', 'c_feature', 'c_question', 'class_int')
 
 	# clean 'labels' column
 	df['labels'] = clean_labels(df['labels'].values)
@@ -171,11 +245,10 @@ def preprocess(df, save=True):
 	# vectorize labels
 	labels_df = vectorize(df['labels'], labels, prefix='label')
 
+	df = clean_text_data(df, 'title', 'body')
+
 	# add the vectorized labels
 	df = transform(df, to_add=[labels_df])
-
-	# normalize the textual features
-	# df = text_preprocessing(df, 'title', 'body')
 
 	if save:
 		# save cleaned dataframe
@@ -202,11 +275,57 @@ def load_data(fetch=False, memory_limit=None, file='data/github.pkl', base_url='
 
 
 if __name__ == '__main__':
+	# define the hyperparameters
+	FETCH = True
+	MEMORY_LIMIT = 100
+	SAVE = True
+
+
 	# load the preprocessed dataset or set 'FETCH=True' to download from scratch
-	github_df = load_data(fetch=FETCH, memory_limit=MEMORY_LIMIT)
+	df = load_data(fetch=FETCH, memory_limit=MEMORY_LIMIT)
+
+	df['url'] = df['url'].str.replace('"', '')
+	df = get_reference_info(df)
+	df = drop_columns(df, 'repo', 'num_labels', 'c_bug', 'c_feature', 'c_question', 'class_int')
+	df['labels'] = clean_labels(df['labels'].values)
+
+	# filter out rare classes
+	labels, _ = min_presence(df, p=.01)
+
+
+	unique_labels = get_unique_values(df, 'labels').keys().values
 	
-	# process the raw dataframe
-	github_df = preprocess(github_df)
+	paraphrase_list = make_combinations(LABELS, unique_labels)
+	_, paraphrase_likelihood = check_paraphrase(paraphrase_list)
+
+
+	label_mapping = {}
+	for i, pair in enumerate(paraphrase_list):
+	    if paraphrase_likelihood[i] > .5:
+	        target_l, real_l = pair[0], pair[1]
+	        try:
+	            label_mapping[real_l].append((target_l, paraphrase_likelihood[i]))
+	        except:
+	            label_mapping[real_l] = []
+	            label_mapping[real_l].append((target_l, paraphrase_likelihood[i]))
+	
+	label_mapping = disambiguate_labels(label_mapping)
+
+	df['labels'] = map_labels(df['labels'], label_mapping)
+
+
+	df = clean_text_data(df, 'title', 'body')
+
+	if 'undefined' not in LABELS:
+    LABELS.append('undefined')
+
+	labels_vectorized = vectorize(df['labels'], LABELS, prefix='label')
+	df = pp.transform(df, to_add=[labels_vectorized])
+
+	if SAVE:
+		# save cleaned dataframe
+		df.to_pickle('data/github.pkl')
+
 
 	
 
