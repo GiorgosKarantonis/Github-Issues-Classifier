@@ -189,6 +189,8 @@ def disambiguate_labels(labels_dict, disambiguate='keep_most_probable'):
 
 
 def map_labels(label_series, mapping):
+	mapped_labels = []
+	
 	for i, label_list in enumerate(label_series):
 	    
 	    temp_labels = []
