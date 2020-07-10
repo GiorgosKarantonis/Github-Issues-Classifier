@@ -317,7 +317,7 @@ if __name__ == '__main__':
 	df = clean_text_data(df, 'title', 'body')
 
 	if 'undefined' not in LABELS:
-    LABELS.append('undefined')
+	    LABELS.append('undefined')
 
 	labels_vectorized = vectorize(df['labels'], LABELS, prefix='label')
 	df = pp.transform(df, to_add=[labels_vectorized])
