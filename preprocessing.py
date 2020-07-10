@@ -1,12 +1,24 @@
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 from nltk import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
-import tensorflow as tf
 from transformers import BertTokenizer, TFBertForSequenceClassification
+
+
+# define the hyperparameters
+FETCH = True
+MEMORY_LIMIT = 100
+
+# a dummy set of labels used for the proof of concept
+LABELS = [
+    'bug', 
+    'enhancement', 
+    'question'
+]
 
 
 
@@ -134,6 +146,8 @@ def text_preprocessing(df, *features):
 
 
 def make_combinations(target, observed):
+	print('Creating Label Combinations...\n')
+
 	combinations = []
 	
 	for t in target:
@@ -144,6 +158,8 @@ def make_combinations(target, observed):
 
 
 def check_paraphrase(inputs):
+	print('Checking for Paraphrase...\n')
+
 	tokenizer = BertTokenizer.from_pretrained('bert-base-cased-finetuned-mrpc')
 	model = TFBertForSequenceClassification.from_pretrained('bert-base-cased-finetuned-mrpc')
 
@@ -162,7 +178,8 @@ def check_paraphrase(inputs):
 
 
 def disambiguate_labels(labels_dict, disambiguate='keep_most_probable'):
-	# can use threshold here instead of the next cell
+	print('Disambiguating Labels...\n')
+
     assert disambiguate in ['keep_most_probable', 'drop_all']
 
     cleaned_dict = {}
@@ -189,6 +206,8 @@ def disambiguate_labels(labels_dict, disambiguate='keep_most_probable'):
 
 
 def map_labels(label_series, mapping):
+	print('Mappping Labels...\n')
+
 	mapped_labels = []
 	
 	for i, label_list in enumerate(label_series):
@@ -230,28 +249,42 @@ def transform(df, **kwargs):
 
 
 def preprocess(df, save=True):
-	# clean 'url' column
 	df['url'] = df['url'].str.replace('"', '')
-
-	# get issue reference data
+	
 	df = get_reference_info(df)
-
-	# drop redundant columns
+	
 	df = drop_columns(df, 'repo', 'num_labels', 'c_bug', 'c_feature', 'c_question', 'class_int')
-
-	# clean 'labels' column
+	
 	df['labels'] = clean_labels(df['labels'].values)
+	
+	df = clean_text_data(df, 'title', 'body')
 
 	# filter out rare classes
 	labels, _ = min_presence(df, p=.01)
 
-	# vectorize labels
-	labels_df = vectorize(df['labels'], labels, prefix='label')
+	unique_labels = get_unique_values(df, 'labels').keys().values
+	
+	paraphrase_list = make_combinations(LABELS, unique_labels)
+	_, paraphrase_likelihood = check_paraphrase(paraphrase_list)
 
-	df = clean_text_data(df, 'title', 'body')
+	label_mapping = {}
+	for i, pair in enumerate(paraphrase_list):
+	    if paraphrase_likelihood[i] > .5:
+	        target_l, real_l = pair[0], pair[1]
+	        try:
+	            label_mapping[real_l].append((target_l, paraphrase_likelihood[i]))
+	        except:
+	            label_mapping[real_l] = []
+	            label_mapping[real_l].append((target_l, paraphrase_likelihood[i]))
+	
+	label_mapping = disambiguate_labels(label_mapping)
+	df['labels'] = map_labels(df['labels'], label_mapping)
 
-	# add the vectorized labels
-	df = transform(df, to_add=[labels_df])
+	if 'undefined' not in LABELS:
+	    LABELS.append('undefined')
+
+	labels_vectorized = vectorize(df['labels'], LABELS, prefix='label')
+	df = pp.transform(df, to_add=[labels_vectorized])
 
 	if save:
 		# save cleaned dataframe
@@ -278,57 +311,10 @@ def load_data(fetch=False, memory_limit=None, file='data/github.pkl', base_url='
 
 
 if __name__ == '__main__':
-	# define the hyperparameters
-	FETCH = True
-	MEMORY_LIMIT = 100
-	SAVE = True
-
-
 	# load the preprocessed dataset or set 'FETCH=True' to download from scratch
 	df = load_data(fetch=FETCH, memory_limit=MEMORY_LIMIT)
 
-	df['url'] = df['url'].str.replace('"', '')
-	df = get_reference_info(df)
-	df = drop_columns(df, 'repo', 'num_labels', 'c_bug', 'c_feature', 'c_question', 'class_int')
-	df['labels'] = clean_labels(df['labels'].values)
-
-	# filter out rare classes
-	labels, _ = min_presence(df, p=.01)
-
-
-	unique_labels = get_unique_values(df, 'labels').keys().values
-	
-	paraphrase_list = make_combinations(LABELS, unique_labels)
-	_, paraphrase_likelihood = check_paraphrase(paraphrase_list)
-
-
-	label_mapping = {}
-	for i, pair in enumerate(paraphrase_list):
-	    if paraphrase_likelihood[i] > .5:
-	        target_l, real_l = pair[0], pair[1]
-	        try:
-	            label_mapping[real_l].append((target_l, paraphrase_likelihood[i]))
-	        except:
-	            label_mapping[real_l] = []
-	            label_mapping[real_l].append((target_l, paraphrase_likelihood[i]))
-	
-	label_mapping = disambiguate_labels(label_mapping)
-
-	df['labels'] = map_labels(df['labels'], label_mapping)
-
-
-	df = clean_text_data(df, 'title', 'body')
-
-	if 'undefined' not in LABELS:
-	    LABELS.append('undefined')
-
-	labels_vectorized = vectorize(df['labels'], LABELS, prefix='label')
-	df = pp.transform(df, to_add=[labels_vectorized])
-
-	if SAVE:
-		# save cleaned dataframe
-		df.to_pickle('data/github.pkl')
-
+	df = preprocess(df)
 
 	
 
