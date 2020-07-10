@@ -5,7 +5,11 @@ from nltk import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
-from transformers import BertTokenizer, TFBertForSequenceClassification
+try:
+	from transformers import BertTokenizer, TFBertForSequenceClassification
+except:
+	!pip install transformers==3.0.0
+	from transformers import BertTokenizer, TFBertForSequenceClassification
 
 
 
