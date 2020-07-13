@@ -17,7 +17,7 @@ from transformers import BertTokenizer, TFBertForSequenceClassification
 
 
 # define the hyperparameters
-FETCH = True
+FETCH = False
 MEMORY_LIMIT = None
 VERBOSE = True
 
@@ -210,7 +210,7 @@ def make_combinations(target, observed, verbose=VERBOSE):
 	return combinations
 
 
-def check_paraphrase(inputs, low_memory=True, chunk_size=10000, verbose=VERBOSE):
+def check_paraphrase(inputs, low_memory=True, chunk_size=5000, verbose=VERBOSE):
 	if verbose:
 		print('Checking for Paraphrase...\n')
 	else:
@@ -219,7 +219,7 @@ def check_paraphrase(inputs, low_memory=True, chunk_size=10000, verbose=VERBOSE)
 	if low_memory:
 		n_chunks = get_n_chunks(inputs, chunk_size)
 		
-		paraphrase_likelihood = []
+		paraphrase_likelihood = np.array([])
 
 		tokenizer = BertTokenizer.from_pretrained('bert-base-cased-finetuned-mrpc', output_loading_info=False)
 		model = TFBertForSequenceClassification.from_pretrained('bert-base-cased-finetuned-mrpc', output_loading_info=False)
@@ -245,12 +245,10 @@ def check_paraphrase(inputs, low_memory=True, chunk_size=10000, verbose=VERBOSE)
 			logits = model(cur_inputs)[0]
 			outputs = tf.nn.softmax(logits, axis=1).numpy()
 
-			paraphrase_likelihood.append(outputs[:, 1])
+			paraphrase_likelihood = np.append(paraphrase_likelihood, outputs[:, 1])
 
 
-			print(f'Time elapsed: {time() - start}secs')
-
-		paraphrase_likelihood = np.array(paraphrase_likelihood).flatten()
+			print(f'Time elapsed for chunk {i}: {time() - start}secs')
 	else:
 		tokenizer = BertTokenizer.from_pretrained('bert-base-cased-finetuned-mrpc', output_loading_info=False)
 		model = TFBertForSequenceClassification.from_pretrained('bert-base-cased-finetuned-mrpc', output_loading_info=False)
