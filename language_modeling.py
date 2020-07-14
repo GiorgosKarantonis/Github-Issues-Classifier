@@ -29,6 +29,31 @@ def get_embeddings(data, tokenizer=tokenizer_dstl, model=model_dstl):
     return logits
 
 
+def refactor_text(text_list, labels, threshold=512, equal_size=True):
+    new_text, new_labels = [], []
+
+    for (i, row), l in zip(enumerate(text_list), labels):
+        if len(row) > threshold:
+            n_chunks = pp.get_n_chunks(row, threshold)
+            
+            for i in range(n_chunks):
+                end = (i+1)*threshold
+                
+                if equal_size and len(row) - end < threshold:
+                    new_row = row[-threshold:]
+                else:
+                    new_row = row[i*threshold:end]
+                                    
+                new_text.append(new_row)
+                new_labels.append(l)
+        else:
+            new_text.append(row)
+            new_labels.append(l)
+
+
+    return new_text, new_labels
+
+
 def save_tensor(tensor, path):
     array = tensor.numpy()
     
