@@ -6,6 +6,8 @@ import tensorflow as tf
 from transformers import BertTokenizer, DistilBertTokenizer, DistilBertTokenizerFast
 from transformers import TFBertModel, TFDistilBertModel
 
+import preprocessing as pp
+
 
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
