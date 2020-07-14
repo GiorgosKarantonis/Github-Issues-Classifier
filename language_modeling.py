@@ -6,7 +6,7 @@ import tensorflow as tf
 from transformers import BertTokenizer, DistilBertTokenizer, DistilBertTokenizerFast
 from transformers import TFBertModel, TFDistilBertModel
 
-import preprocessing as pp
+from preprocessing import get_n_chunks
 
 
 
@@ -34,9 +34,9 @@ def get_embeddings(data, tokenizer=tokenizer_dstl, model=model_dstl):
 def refactor_text(text_list, labels, threshold=512, equal_size=True):
     new_text, new_labels = [], []
 
-    for (i, row), l in zip(enumerate(text_list), labels):
+    for row, l in zip(text_list, labels):
         if len(row) > threshold:
-            n_chunks = pp.get_n_chunks(row, threshold)
+            n_chunks = get_n_chunks(row, threshold)
             
             for i in range(n_chunks):
                 end = (i+1)*threshold
@@ -70,8 +70,9 @@ def load_array(path, to_tensor=True):
 
 
 if __name__=='__main__':
+    pass
     # to do: fix truncation issue
-    embeddings_title = get_embeddings(df['title'].values.tolist())  # n_examples x n_words (or threshold) x 768
-    embeddings_body = get_embeddings(df['body'].values.tolist())  # n_examples x n_words (or threshold) x 768
+    # embeddings_title = get_embeddings(df['title'].values.tolist())  # n_examples x n_words (or threshold) x 768
+    # embeddings_body = get_embeddings(df['body'].values.tolist())  # n_examples x n_words (or threshold) x 768
 
-    labels = np.transpose([df[c] for c in df.columns if c.startswith('label_')])
+    # labels = np.transpose([df[c] for c in df.columns if c.startswith('label_')])
