@@ -5,8 +5,9 @@ import tensorflow as tf
 
 from transformers import BertTokenizer, DistilBertTokenizer, DistilBertTokenizerFast
 from transformers import TFBertModel, TFDistilBertModel
+from transformers import T5Tokenizer, TFT5ForConditionalGeneration
 
-from preprocessing import get_n_chunks
+# from preprocessing import get_n_chunks
 
 
 
@@ -17,6 +18,12 @@ tokenizer_dstl_fast = DistilBertTokenizerFast.from_pretrained('distilbert-base-u
 model = TFBertModel.from_pretrained('bert-base-cased')
 model_dstl = TFDistilBertModel.from_pretrained('distilbert-base-uncased')
 
+
+
+def get_n_chunks(df, chunk_size):
+	df_size = len(df)
+
+	return int(df_size / chunk_size) if df_size % chunk_size == 0 else int(df_size / chunk_size) + 1
 
 
 def get_embeddings(data, tokenizer=tokenizer_dstl, model=model_dstl):
@@ -31,29 +38,17 @@ def get_embeddings(data, tokenizer=tokenizer_dstl, model=model_dstl):
     return logits
 
 
-def refactor_text(text_list, labels, threshold=512, equal_size=True):
-    new_text, new_labels = [], []
-
-    for row, l in zip(text_list, labels):
-        if len(row) > threshold:
-            n_chunks = get_n_chunks(row, threshold)
-            
-            for i in range(n_chunks):
-                end = (i+1)*threshold
-                
-                if equal_size and len(row) - end < threshold:
-                    new_row = row[-threshold:]
-                else:
-                    new_row = row[i*threshold:end]
-                                    
-                new_text.append(new_row)
-                new_labels.append(l)
-        else:
-            new_text.append(row)
-            new_labels.append(l)
+def summarize(text):
+	tokenizer = T5Tokenizer.from_pretrained('t5-small')
+	model = TFT5ForConditionalGeneration.from_pretrained('t5-small')
+	
+	inputs = tokenizer.encode(text, return_tensors="tf")  # Batch size 1
+	
+	return model.generate(inputs)
 
 
-    return new_text, new_labels
+def refactor_text(*text_features, labels, threshold=512, equal_size=True):
+    raise NotImplementedError('Use summarization to deal with large sequences. ')
 
 
 def save_tensor(tensor, path):
