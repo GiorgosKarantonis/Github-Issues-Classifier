@@ -164,6 +164,7 @@ def clean_text_data(df, verbose=VERBOSE, *features):
 
 	for feature in features:
 		df[feature] = df[feature].str.replace(r'\\r', '').str.lower()
+		df[feature] = df[feature].str.split().str.join(' ')
 
 	return df
 
@@ -352,7 +353,7 @@ def preprocess(df, save=True, save_to='data/github.pkl'):
 	df = clean_text_data(df, 'title', 'body')
 
 	# filter out rare classes
-	labels, _ = min_presence(df, p=.01)
+	# labels, _ = min_presence(df, p=.01)
 
 	unique_labels = get_unique_values(df, 'labels').keys().values
 	
