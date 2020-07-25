@@ -223,7 +223,9 @@ def check_paraphrase(inputs, low_memory=True, chunk_size=5000, verbose=VERBOSE):
 		paraphrase_likelihood = np.array([])
 
 		tokenizer = BertTokenizer.from_pretrained('bert-base-cased-finetuned-mrpc', output_loading_info=False)
-		model = TFBertForSequenceClassification.from_pretrained('bert-base-cased-finetuned-mrpc', output_loading_info=False)
+		model = TFBertForSequenceClassification.from_pretrained(	'bert-base-cased-finetuned-mrpc', 
+																	output_loading_info=False, 
+																	training=False)
 
 		for i in range(n_chunks):
 			from time import time
@@ -252,7 +254,9 @@ def check_paraphrase(inputs, low_memory=True, chunk_size=5000, verbose=VERBOSE):
 			print(f'Time elapsed for chunk {i}: {time() - start}secs')
 	else:
 		tokenizer = BertTokenizer.from_pretrained('bert-base-cased-finetuned-mrpc', output_loading_info=False)
-		model = TFBertForSequenceClassification.from_pretrained('bert-base-cased-finetuned-mrpc', output_loading_info=False)
+		model = TFBertForSequenceClassification.from_pretrained(	'bert-base-cased-finetuned-mrpc', 
+																	output_loading_info=False, 
+																	training=False)
 
 		inputs = tokenizer(	inputs, 
 							padding=True, 
