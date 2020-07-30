@@ -14,6 +14,8 @@ from nltk.stem import PorterStemmer
 
 from transformers import BertTokenizer, TFBertForSequenceClassification
 
+from utils import get_n_chunks, get_unique_values
+
 
 
 # define the hyperparameters
@@ -30,12 +32,6 @@ LABELS = [
 
 
 
-def get_n_chunks(df, chunk_size):
-	df_size = len(df)
-
-	return int(df_size / chunk_size) if df_size % chunk_size == 0 else int(df_size / chunk_size) + 1
-
-
 def download_data(memory_limit=None, save=True, base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000', verbose=VERBOSE):
 	if verbose:
 		print('Downloading Dataset...\n')
@@ -47,34 +43,6 @@ def download_data(memory_limit=None, save=True, base_url='https://storage.google
 
 	return df
 
-
-def download_data_seperately(base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000', chunk_size=10000, verbose=VERBOSE):
-	if not os.path.exists('data/split'):
-		os.makedirs('data/split/raw')
-
-	if verbose:
-		print('Downloading Dataset...\n')
-
-	df_counter = 0
-
-	for i in range(10):
-		print(f'{i+1}/10\r', end='')
-
-		df = pd.read_csv(f'{base_url}{i}.csv.gz')
-
-		n_chunks = get_n_chunks(df, chunk_size)
-
-		for j in range(n_chunks):
-			try:
-				df.iloc[j*chunk_size:(j+1)*chunk_size].to_pickle(f'data/split/raw/github_raw_{df_counter}.pkl')
-			except IndexError:
-				df.iloc[j*chunk_size:].to_pickle(f'data/split/raw/raw/github_raw_{df_counter}.pkl')
-
-			df_counter += 1
-
-	if verbose:
-		print('Finished Downloading')
-	
 
 def drop_columns(df, verbose=VERBOSE, *columns):
 	if verbose:
@@ -123,10 +91,6 @@ def get_reference_info(df, verbose=VERBOSE):
 	return df
 
 
-def get_unique_values(df, feature):
-	return df.explode(feature)[feature].value_counts()
-
-
 def min_presence(df, feature='labels', p=.001, verbose=VERBOSE):
 	if verbose:
 		print('Filtering out Redundant Labels...\n')
@@ -165,35 +129,6 @@ def clean_text_data(df, verbose=VERBOSE, *features):
 	for feature in features:
 		df[feature] = df[feature].str.replace(r'\\r', '').str.lower()
 		df[feature] = df[feature].str.split().str.join(' ')
-
-	return df
-
-
-def text_preprocessing(df, verbose=VERBOSE, *features):
-	if verbose:
-		print('Processing Text Data...\n')
-
-	for i, feature in enumerate(features):
-		# tokenize
-		try:
-			df[feature] = df[feature].apply(word_tokenize)
-		except LookupError:
-			nltk.download('punkt')
-			df[feature] = df[feature].apply(word_tokenize)
-
-		# remove stop words and noise
-		try:
-			df[feature] = [[word for word in issue if word not in stopwords.words('english') and word.isalpha()] for issue in df[feature]]
-		except LookupError:
-			nltk.download('stopwords')
-			df[feature] = [[word for word in issue if word not in stopwords.words('english') and word.isalpha()] for issue in df[feature]]
-
-		# stem the tokens
-		try:
-			df[feature] = [[PorterStemmer().stem(word) for word in issue] for issue in df[feature]]
-		except LookupError:
-			nltk.download('wordnet')
-			df[feature] = [[PorterStemmer().stem(word) for word in issue] for issue in df[feature]]
 
 	return df
 

@@ -1,0 +1,38 @@
+{
+    "gpt2" : {
+                "name" : "gpt2", 
+                "model" : "distilgpt2", 
+                "batch size" : 100, 
+                "embedding size" : 0, 
+                "max length": 1024, 
+                "time needed": 2, 
+                "info" : "~2sec per 100 examples, max length: 1024"
+             }, 
+    "electra" : {
+                "name" : "electra", 
+                "model" : "google/electra-small-discriminator", 
+                "batch size" : 1000, 
+                "embedding size" : 256, 
+                "max length": 512, 
+                "time needed": 2.6, 
+                "info" : "~2.6sec per 1000 examples, max length: 512"
+             }, 
+    "distilbert" : {
+                "name" : "distilbert", 
+                "model" : "distilbert-base-uncased", 
+                "batch size" : 100, 
+                "embedding size" : 768, 
+                "max length": 512, 
+                "time needed": 0.26, 
+                "info": "~0.26sec per 100 examples, max length: 512"
+             }, 
+    "bert" : {
+                "name" : "bert", 
+                "model" : "bert-base-cased", 
+                "batch size" : 100, 
+                "embedding size" : 768, 
+                "max length": 512, 
+                "time needed": 0.28, 
+                "~0.28sec per 100 examples, max length: 512"
+             }
+}
