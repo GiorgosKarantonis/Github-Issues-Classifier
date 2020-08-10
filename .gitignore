@@ -1,5 +1,7 @@
 .ipynb_checkpoints
 *.pkl
+label_bot/models/
+*.tar.gz
 *.DS_Store
 *.png
 *.bin
