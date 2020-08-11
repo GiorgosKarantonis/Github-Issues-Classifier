@@ -136,24 +136,29 @@ class Bot:
 
 
     def predict(self, title, body):
+        if isinstance(title, str):
+            title = pd.DataFrame([title])
+        if isinstance(body, str):
+            body = pd.DataFrame([body])
+
         if not isinstance(title, pd.DataFrame):
-            titles = pd.DataFrame(title)
+            title = pd.DataFrame(title)
         if not isinstance(body, pd.DataFrame):
-            bodies = pd.DataFrame(body)
+            body = pd.DataFrame(body)
+
+        title.columns = ['text']
+        body.columns = ['text']
             
         if self.use_head:
-            titles.columns = ['text']
-            bodies.columns = ['text']
-
-            _, titles_scores = self.classifier.predict(titles['text'])
-            _, bodies_scores = self.classifier.predict(bodies['text'])
+            _, titles_scores = self.classifier.predict(title['text'])
+            _, bodies_scores = self.classifier.predict(body['text'])
 
             head = ScoresHead()
             head = torch.load(os.path.join(self.model_path, 'scores_head.pt'))
             
             scores = head.predict(titles_scores, bodies_scores)
         else:
-            df = pd.DataFrame(titles + ' ' + bodies)
+            df = pd.DataFrame(title['text'] + ' ' + body['text'])
             df.columns = ['text']
 
             _, scores = self.classifier.predict(df['text'])

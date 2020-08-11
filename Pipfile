@@ -6,12 +6,22 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-numpy = "*"
-pandas = "*"
 nltk = "*"
 gensim = "*"
 transformers = "==3.0.0"
 tensorflow = "*"
+torch = "*"
+sklearn = "*"
+tensorboardX = "*"
+rsa = "==3.4"
+wrapt = "==1.11.1"
+matplotlib = "*"
+numba = "*"
+scipy = "*"
+uuid = "*"
+pandas = "==1.0.5"
+numpy = "==1.18.5"
+simpletransformers = "*"
 
 [requires]
 python_version = "3.6"

@@ -8,6 +8,8 @@ from sklearn.preprocessing import MultiLabelBinarizer
 
 from matplotlib import pyplot as plt
 
+from simpletransformers.classification import MultiLabelClassificationModel
+
 
 
 def get_model_stats(y_true, model_outputs, b_thres=.5, q_thres=.5, e_thres=.5, plot_roc=True):
@@ -66,6 +68,20 @@ def get_model_stats(y_true, model_outputs, b_thres=.5, q_thres=.5, e_thres=.5, p
 
 
     return metrics_df, exact_accuracy, lrap_score
+
+
+def load_model(args, task='mlc', name='roberta', from_path='roberta-base'):
+    if task == 'mlm':
+        return LanguageModelingModel(   name, 
+                                        from_path,  
+                                        args=args)
+    elif task == 'mlc'
+        return MultiLabelClassificationModel(   name, 
+                                                from_path, 
+                                                num_labels=3, 
+                                                args=args)
+    else:
+        raise NotImplementedError("Choose 'mlm' for Masked Language Modeling or 'mlc' for Multilabel Classification!")
 
 
 def load_models_meta():
