@@ -44,7 +44,7 @@ You may also have a look at the `demos/predict.ipynb` file for a few examples on
 ## Potential Improvements
 If you are interested in improving the performance of the classifier, I would recommend considering the following: 
 
-* **Noise reduction in the bodies using summarization.** I experimented with this using [BART](https://arxiv.org/abs/1910.13461), but I ran into several bugs. If you plan on working on the summarization, I would advice you to use [T5's](https://arxiv.org/abs/1910.10683) [tensorflow version](https://huggingface.co/transformers/model_doc/t5.html#tft5forconditionalgeneration). 😉
+* **Noise reduction in the bodies using summarization.** I experimented with this using [BART](https://arxiv.org/abs/1910.13461), but I ran into several bugs. If you plan on working on the summarization, I would advice you to use [T5's](https://arxiv.org/abs/1910.10683) [tensorflow version](https://huggingface.co/transformers/model_doc/t5.html#tft5forconditionalgeneration). 
 
 * **Fine-tune a language model first.** It's unfair to think of GitHub issues as regular text due to the fact that they are usually a hybrid between real text, code and logs etc. So fine-tuning a language model on this dataset and then fine-tuning this language model on classification could yield good results. In the `demos/prepare_dataset.ipynb` file you can find a sampling method that ensures that the examples used in the language model will be different than the ones used in the classification task. 
 
