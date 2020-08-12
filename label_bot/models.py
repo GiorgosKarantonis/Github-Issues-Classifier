@@ -12,6 +12,10 @@ from simpletransformers.classification import MultiLabelClassificationModel
 
 
 
+_HERE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+
 class ScoresHead(nn.Module):
     def __init__(self, custom_head=None):
         super().__init__()
@@ -112,9 +116,10 @@ class ScoresHead(nn.Module):
 
 
 class Bot:
-    def __init__(self, use_head=True, model_name='roberta', model_path='models/classification/roberta-base'):
+    def __init__(self, use_head=True, model_name='roberta', model_path=os.path.join(_HERE_DIR, 'models', 'classification', 'roberta-base')):
         super().__init__()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
         self.use_head = use_head
         self.model_path = model_path
@@ -132,7 +137,8 @@ class Bot:
         return MultiLabelClassificationModel(name, 
                                              from_path, 
                                              num_labels=3, 
-                                             args=model_args)
+                                             args=model_args, 
+                                             use_cuda=self.device=='cuda')
 
 
     def predict(self, title, body):
@@ -154,7 +160,10 @@ class Bot:
             _, bodies_scores = self.classifier.predict(body['text'])
 
             head = ScoresHead()
-            head = torch.load(os.path.join(self.model_path, 'scores_head.pt'))
+            if self.device == 'cuda':    
+                head.load_state_dict(torch.load(os.path.join(self.model_path, 'scores_head.pt')))
+            else:
+                head.load_state_dict(torch.load(os.path.join(self.model_path, 'scores_head.pt'), map_location=torch.device('cpu')))
             
             scores = head.predict(titles_scores, bodies_scores)
         else:
