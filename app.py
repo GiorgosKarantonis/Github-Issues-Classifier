@@ -11,7 +11,7 @@ def cli():
 
 
 def predict(title, body):
-	return bot.predict(title, body)[0]	
+	return bot.predict(title, body)
 
 
 def demo():

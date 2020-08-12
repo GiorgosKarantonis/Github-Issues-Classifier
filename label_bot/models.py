@@ -173,4 +173,4 @@ class Bot:
             _, scores = self.classifier.predict(df['text'])
 
         
-        return scores
+        return scores[0]
