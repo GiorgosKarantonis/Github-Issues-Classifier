@@ -57,29 +57,27 @@ def get_model_stats(y_true, model_outputs, b_thres=.5, q_thres=.5, e_thres=.5, p
 
     exact_accuracy = exact_matches/len(y_true)
 
-
-    metrics_df = pd.DataFrame([ [b_accuracy, b_roc_auc, b_precision, b_recall, b_f1], 
-                                [q_accuracy, q_roc_auc, q_precision, q_recall, q_f1], 
-                                [e_accuracy, e_roc_auc, e_precision, e_recall, e_f1]], 
+    metrics_df = pd.DataFrame([[b_accuracy, b_roc_auc, b_precision, b_recall, b_f1], 
+                               [q_accuracy, q_roc_auc, q_precision, q_recall, q_f1], 
+                               [e_accuracy, e_roc_auc, e_precision, e_recall, e_f1]], 
                             columns=['Accuracy', 'ROC-AUC', 'Precision', 'Recall', 'F1'], 
                             index=['Bug', 'Question', 'Enhancement'])
 
     lrap_score = lrap(y_true, model_outputs)
-
 
     return metrics_df, exact_accuracy, lrap_score
 
 
 def load_model(args, task='mlc', name='roberta', from_path='roberta-base'):
     if task == 'mlm':
-        return LanguageModelingModel(   name, 
-                                        from_path,  
-                                        args=args)
-    elif task == 'mlc'
-        return MultiLabelClassificationModel(   name, 
-                                                from_path, 
-                                                num_labels=3, 
-                                                args=args)
+        return LanguageModelingModel(name, 
+                                     from_path, 
+                                     args=args)
+    elif task == 'mlc':
+        return MultiLabelClassificationModel(name, 
+                                             from_path, 
+                                             num_labels=3, 
+                                             args=args)
     else:
         raise NotImplementedError("Choose 'mlm' for Masked Language Modeling or 'mlc' for Multilabel Classification!")
 
@@ -87,7 +85,6 @@ def load_model(args, task='mlc', name='roberta', from_path='roberta-base'):
 def load_models_meta():
     with open('models.json') as json_file: 
         models_meta = json.load(json_file)
-
 
     return models_meta
 
@@ -104,6 +101,7 @@ def get_unique_values(df, feature):
 
 def df_to_txt(df, return_text=False, save=True, path='./', name='text', extension='txt'):
     text = ''
+    
     for i in range(len(df)):
         title = df.iloc[i].title
         body = df.iloc[i].body
@@ -121,10 +119,10 @@ def df_to_txt(df, return_text=False, save=True, path='./', name='text', extensio
         return text
 
 
-def split_to_classes(   df, 
-                        to_keep=['title', 'body', 'label_bug', 'label_question', 'label_enhancement'], 
-                        save=False, 
-                        path='./'):
+def split_to_classes(df, 
+                     to_keep=['title', 'body', 'label_bug', 'label_question', 'label_enhancement'], 
+                     save=False, 
+                     path='./'):
 
     if to_keep:
         df = df[to_keep]
@@ -155,7 +153,6 @@ def split_to_classes(   df,
         enhancements_df.to_pickle(f'{path}enhancements.pkl')
         combinations_df.to_pickle(f'{path}combinations.pkl')
 
-
     return bugs_df, questions_df, enhancements_df, combinations_df
 
 
@@ -164,21 +161,21 @@ def get_labels_stats(df):
 
     # all the examples that are labelled
     # only as bugs
-    b = len(df.query(   'label_bug == 1 and \
-                        label_question == 0 and \
-                        label_enhancement == 0'))
+    b = len(df.query('label_bug == 1 and \
+                      label_question == 0 and \
+                      label_enhancement == 0'))
 
     # all the examples that are labelled
     # only as questions
-    q = len(df.query(   'label_bug == 0 and \
-                        label_question == 1 and \
-                        label_enhancement == 0'))
+    q = len(df.query('label_bug == 0 and \
+                      label_question == 1 and \
+                      label_enhancement == 0'))
 
     # all the examples that are labelled
     # only as enhancement
-    e = len(df.query(   'label_bug == 0 and \
-                        label_question == 0 and \
-                        label_enhancement == 1'))
+    e = len(df.query('label_bug == 0 and \
+                      label_question == 0 and \
+                      label_enhancement == 1'))
 
     # all the examples that are labelled
     # only as both bug and question
@@ -188,21 +185,21 @@ def get_labels_stats(df):
 
     # all the examples that are labelled
     # only as both bug and enhancement
-    b_e = len(df.query( 'label_bug == 1 and \
+    b_e = len(df.query('label_bug == 1 and \
                         label_question == 0 and \
                         label_enhancement == 1'))
 
     # all the examples that are labelled
     # only as both question and enhancement
-    q_e = len(df.query( 'label_bug == 0 and \
+    q_e = len(df.query('label_bug == 0 and \
                         label_question == 1 and \
                         label_enhancement == 1'))
 
     # all the examples that are labelled
     # as bug, question and enhancement
-    b_q_e = len(df.query(   'label_bug == 1 and \
-                            label_question == 1 and \
-                            label_enhancement == 1'))
+    b_q_e = len(df.query('label_bug == 1 and \
+                          label_question == 1 and \
+                          label_enhancement == 1'))
 
     return pd.DataFrame([['Bug', b/total, b], 
                          ['Question', q/total, q], 
@@ -215,13 +212,11 @@ def get_labels_stats(df):
                         columns=['Labels Present', 'Fraction', 'Examples'])
 
 
-def sample_df(  df, 
-                n=None, 
-                frac=None, 
-                to_keep=['title', 'body', 'label_bug', 'label_question', 'label_enhancement']):
-    
+def sample_df(df, 
+              n=None, 
+              frac=None, 
+              to_keep=['title', 'body', 'label_bug', 'label_question', 'label_enhancement']):
     assert n != frac
-
     bugs_df, questions_df, enhancements_df, combinations_df = split_to_classes(df, to_keep)
 
     if n:
@@ -233,26 +228,24 @@ def sample_df(  df,
         questions_df = questions_df.sample(frac=frac)
         enhancements_df = enhancements_df.sample(frac=frac)
 
-
     # shuffle the dataframes
     bugs_df = bugs_df.sample(frac=1)
     questions_df = questions_df.sample(frac=1)
     enhancements_df = enhancements_df.sample(frac=1)
     combinations_df = combinations_df.sample(frac=1)
 
-
     return bugs_df, questions_df, enhancements_df, combinations_df
 
 
-def split_train_test(   df, 
-                        validation=False, 
-                        train_frac=.7, 
-                        val_frac=.1, 
-                        shuffle=True, 
-                        save=True, 
-                        path='./', 
-                        name='', 
-                        to_keep=None):
+def split_train_test(df, 
+                     validation=False, 
+                     train_frac=.7, 
+                     val_frac=.1, 
+                     shuffle=True, 
+                     save=True, 
+                     path='./', 
+                     name='', 
+                     to_keep=None):
     if shuffle:
         df = df.sample(frac=1)
 
@@ -264,13 +257,11 @@ def split_train_test(   df,
     train_df = df.iloc[:train_split]
     test_df = df.iloc[train_split:]
 
-
     if validation:
         val_split = int(val_frac * (len(train_df)))
 
         val_df = train_df.iloc[:val_split]
         train_df = train_df.iloc[val_split:]
-
 
     if save:
         if not path.endswith('/'):
@@ -281,7 +272,6 @@ def split_train_test(   df,
 
         if validation:
             val_df.to_pickle(f'{path}{name}val.pkl')
-
 
     if validation:
         return train_df, val_df, test_df

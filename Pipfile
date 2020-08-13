@@ -19,6 +19,7 @@ numpy = "==1.18.5"
 torch = "*"
 tensorboardX = "*"
 click = "*"
+tensorflow = "*"
 
 [requires]
 python_version = "3.6"

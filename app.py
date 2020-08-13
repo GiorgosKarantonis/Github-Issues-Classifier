@@ -1,3 +1,6 @@
+import os
+os.environ["WANDB_SILENT"] = "true"
+
 import sys
 import click
 
