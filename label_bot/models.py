@@ -120,7 +120,6 @@ class Bot:
         super().__init__()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-
         self.use_head = use_head
         self.model_path = model_path
 
