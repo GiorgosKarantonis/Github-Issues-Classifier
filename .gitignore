@@ -1,4 +1,5 @@
 .ipynb_checkpoints
+token_private.json
 *.pkl
 label_bot/models/
 *.tar.gz

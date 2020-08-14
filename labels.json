@@ -1,4 +1,6 @@
 {
+	"FILE DESCRIPTION" : "DEFINE YOUR PREFFERRED TARGET LABELS, AS WELL AS POSSIBLE ALIASES, USING THE FORMAT 'ALIAS : LABEL'. ", 
+
     "bug" : "bug", 
     "question" : "question", 
     "enhancement" : "enhancement", 

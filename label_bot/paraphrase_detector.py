@@ -161,6 +161,9 @@ def check_paraphrase(inputs, low_memory=True, chunk_size=1000):
 
             paraphrase_likelihood = np.append(paraphrase_likelihood, outputs[:, 1])
 
+            return paraphrase_likelihood
+
+
             print(f'Time elapsed for chunk {i}: {time() - start}sec')
     else:
         cur_inputs = tokenizer(cur_inputs, 
@@ -183,27 +186,12 @@ def main(label_series):
     label_series = clean_labels(label_series)
     unique_labels = label_series.explode().value_counts().keys().values
 
-
-    '''
-    ##########################################################
-
-    keys = label_series.explode().value_counts().keys().values
-    values = label_series.explode().value_counts()
-    for k, v in zip(keys, values):
-        if v >= 500: print(k, v)
-    exit()
-
-    ##########################################################
-    '''
-
-
     paraphrase_candidates = make_combinations(aliases, unique_labels)
     paraphrase_likelihood = check_paraphrase(paraphrase_candidates)
 
     label_mapping = get_mapping(paraphrase_candidates, paraphrase_likelihood)
     label_mapping = disambiguate_labels(label_mapping)
     label_series = map_labels(label_series, label_mapping)
-
 
     if 'undefined' not in target_labels:
         target_labels.add('undefined')
@@ -217,6 +205,7 @@ def main(label_series):
 def cli(limit, file):
     label_series = pd.read_pickle(file)['labels'][:limit]
     label_series, LABELS = main(label_series)
+
 
 
 if __name__ == '__main__':
