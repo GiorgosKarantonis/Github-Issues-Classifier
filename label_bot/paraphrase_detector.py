@@ -46,7 +46,7 @@ def get_target_labels():
         label_mapping = json.load(f)
 
     aliases = set([k for k in label_mapping.keys()])
-    target_labels = [v for v in label_mapping.values()]
+    target_labels = set([v for v in label_mapping.values()])
 
     return aliases, target_labels, label_mapping
 
@@ -183,6 +183,20 @@ def main(label_series):
     label_series = clean_labels(label_series)
     unique_labels = label_series.explode().value_counts().keys().values
 
+
+    '''
+    ##########################################################
+
+    keys = label_series.explode().value_counts().keys().values
+    values = label_series.explode().value_counts()
+    for k, v in zip(keys, values):
+        if v >= 500: print(k, v)
+    exit()
+
+    ##########################################################
+    '''
+
+
     paraphrase_candidates = make_combinations(aliases, unique_labels)
     paraphrase_likelihood = check_paraphrase(paraphrase_candidates)
 
@@ -192,17 +206,17 @@ def main(label_series):
 
 
     if 'undefined' not in target_labels:
-        target_labels.append('undefined')
+        target_labels.add('undefined')
 
     return label_series, target_labels
 
 
 @click.command()
 @click.option('--limit', '-L', default=None, type=int)
-def cli(limit):
-    label_series = pd.read_pickle('data/github_raw.pkl')['labels'][:limit]
+@click.option('--file', '-F', default='data/github_raw.pkl', type=str)
+def cli(limit, file):
+    label_series = pd.read_pickle(file)['labels'][:limit]
     label_series, LABELS = main(label_series)
-
 
 
 if __name__ == '__main__':
