@@ -137,7 +137,7 @@ class Bot:
                                              from_path, 
                                              num_labels=3, 
                                              args=model_args, 
-                                             use_cuda=self.device=='cuda')
+                                             use_cuda=self.device==torch.device('cuda'))
 
 
     def predict(self, title, body):
