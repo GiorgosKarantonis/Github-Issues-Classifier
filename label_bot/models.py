@@ -11,7 +11,6 @@ import torch.optim as optim
 from simpletransformers.classification import MultiLabelClassificationModel
 
 
-
 _HERE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -30,14 +29,20 @@ class ScoresHead(nn.Module):
     
     def default_head(self):
         return [
-            nn.Linear(6, 100), 
+            nn.Linear(9, 100), 
             nn.LeakyReLU(.2), 
+            nn.BatchNorm1d(100), 
             nn.Linear(100, 3)
         ]
         
         
-    def forward(self, titles, bodies):
-        x = torch.cat((titles, bodies), dim=1).to(self.device)
+    def forward(self, titles, bodies, combined, train=True):
+        if train: 
+            self.model = self.model.train()
+        else:
+            self.model = self.model.eval()
+
+        x = torch.cat((titles, bodies, combined), dim=1).to(self.device)
         x = self.model(x)
         x = torch.sigmoid(x)
         
@@ -47,13 +52,15 @@ class ScoresHead(nn.Module):
     def fit(self, 
             titles, 
             bodies, 
+            combined, 
             labels, 
             validation=True, 
             val_titles=None, 
             val_bodies=None, 
+            val_combined=None, 
             val_labels=None, 
             epochs=35, 
-            lr=1e-2, 
+            lr=5e-3, 
             verbose=True):
         
         losses = {
@@ -63,13 +70,25 @@ class ScoresHead(nn.Module):
             
         optimizer = self.optimizer(self.model.parameters(), lr=lr)
         
+        labels = np.array(labels)
+        
         for epoch in range(epochs):
+            indices = np.arange(titles.shape[0])
+            np.random.shuffle(indices)
+
+            titles = titles[indices]
+            bodies = bodies[indices]
+            combined = combined[indices]
+            labels = labels[indices]
+            
             titles_tensor = torch.from_numpy(titles).to(self.device)
             bodies_tensor = torch.from_numpy(bodies).to(self.device)
+            combined_tensor = torch.from_numpy(combined).to(self.device)
+            
             labels = torch.FloatTensor(list(map(list, labels))).to(self.device)
             
             optimizer.zero_grad()
-            outputs = self.forward(titles_tensor, bodies_tensor)
+            outputs = self.forward(titles_tensor, bodies_tensor, combined_tensor)
                         
             loss = self.loss(outputs, labels)
             
@@ -78,7 +97,7 @@ class ScoresHead(nn.Module):
             
             losses['train'].append(loss.item())
             if validation:
-                val_loss = self.evaluate(val_titles, val_bodies, val_labels)
+                val_loss = self.evaluate(val_titles, val_bodies, val_combined, val_labels)
                 losses['val'].append(val_loss)
             
             if verbose:
@@ -86,30 +105,35 @@ class ScoresHead(nn.Module):
                 print(f'Training loss: {loss.item()}')
                 if validation:
                     print(f'Validation loss: {val_loss}')
+                    print('Validation Accuracy: ', accuracy(np.where(outputs.detach().cpu().numpy() > .5, 1, 0), 
+                                                            labels.detach().cpu().numpy()))
                 print()
                         
         return outputs.detach().cpu().numpy(), losses
     
     
-    def evaluate(self, titles, bodies, labels):
+    def evaluate(self, titles, bodies, combined, labels):
         losses = []
         
         titles_tensor = torch.from_numpy(titles).to(self.device)
         bodies_tensor = torch.from_numpy(bodies).to(self.device)
+        combined_tensor = torch.from_numpy(combined).to(self.device)
+        
         labels = torch.FloatTensor(list(map(list, labels))).to(self.device)
         
-        outputs = self.forward(titles_tensor, bodies_tensor)
+        outputs = self.forward(titles_tensor, bodies_tensor, combined_tensor, train=False)
         
         loss = self.loss(outputs, labels)
         
         return loss.detach().cpu().item()
     
     
-    def predict(self, titles, bodies):
+    def predict(self, titles, bodies, combined):
         titles_tensor = torch.from_numpy(titles).to(self.device)
         bodies_tensor = torch.from_numpy(bodies).to(self.device)
+        combined_tensor = torch.from_numpy(combined).to(self.device)
         
-        predictions = self.forward(titles_tensor, bodies_tensor)
+        predictions = self.forward(titles_tensor, bodies_tensor, combined_tensor, train=False)
         
         return predictions.detach().cpu().numpy()
 
@@ -119,6 +143,7 @@ class Bot:
     def __init__(self, use_head=True, model_name='roberta', model_path=os.path.join(_HERE_DIR, 'models', 'classification', 'roberta-base')):
         super().__init__()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
         self.use_head = use_head
         self.model_path = model_path
@@ -157,6 +182,7 @@ class Bot:
         if self.use_head:
             _, titles_scores = self.classifier.predict(title['text'])
             _, bodies_scores = self.classifier.predict(body['text'])
+            _, scores = self.classifier.predict(title['text'] + ' ' + body['text'])
 
             head = ScoresHead()
             if self.device == 'cuda':    
@@ -164,12 +190,12 @@ class Bot:
             else:
                 head.load_state_dict(torch.load(os.path.join(self.model_path, 'scores_head.pt'), map_location=torch.device('cpu')))
             
-            scores = head.predict(titles_scores, bodies_scores)
+            scores = head.predict(titles_scores, bodies_scores, scores)
         else:
             df = pd.DataFrame(title['text'] + ' ' + body['text'])
             df.columns = ['text']
-
+            
             _, scores = self.classifier.predict(df['text'])
 
         
-        return scores[0]
+        return scores
