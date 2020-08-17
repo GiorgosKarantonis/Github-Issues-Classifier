@@ -1,9 +1,10 @@
 # Predicting Issues' Labels with RoBERTa
 
-![demo](https://github.com/GiorgosKarantonis/images/blob/master/label_bot/demo.gif)
-
 ## Introduction
 This multilabel classifier can predict any combination of *bug*, *question* and *enhancement*, using [RoBERTa](https://arxiv.org/abs/1907.11692), one of the best performing NLP models, fine-tuned on the multilabel classification task. Additionally, the predefined set of labels can be easily extended to almost any set of labels thanks to the incorporated paraphrase detection component; you can simply specify their desired labels and use this component to map them to actual labels in the dataset. Finally, it is completely straightforward to define your own aliases for each one of the predefined labels. 
+
+
+![demo](https://github.com/GiorgosKarantonis/images/blob/master/label_bot/demo.gif)
 
 
 ## Performance
