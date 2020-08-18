@@ -56,6 +56,8 @@ def run_on_org(organization):
 @cli.command("crawl-user")
 @click.option("--user", "-U")
 def run_on_user(user):
+    results = []
+
     token = get_token()
     g = Github(token)
 
@@ -72,6 +74,8 @@ def run_on_user(user):
 @cli.command("crawl-repo")
 @click.option("--repo", "-R")
 def run_on_repo(repo):
+    results = []
+
     token = get_token()
     g = Github(token)
 
@@ -88,6 +92,8 @@ def run_on_repo(repo):
 @click.option("--repo", "-R")
 @click.option("--issue", "-I")
 def run_on_issue(repo, issue):
+    results = []
+
     token = get_token()
     g = Github(token)
 
