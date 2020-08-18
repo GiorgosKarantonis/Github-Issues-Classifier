@@ -16,19 +16,21 @@ You can have a look at the [`notebooks/stats.ipynb`](https://github.com/GiorgosK
 
 
 ## The Dataset
+The original dataset consists of more than 3 million examples of GitHub issues and each one is described by its url, its repo, its title, its body and the assigned labels. Although the size of the dataset can be a big advantage to deep learning architectures there are two severe disadvantages. The first is that some labels, for example `bug` and its derivatives, dominate the dataset which can lead to unreliable classifiers. The second is the inconsistency of the labels, which means that labels that have the same meaning appear under different names in the dataset. You can check the [`notebooks/prepare_dataset.ipynb`](https://github.com/GiorgosKarantonis/Github-Issues-Classifier/blob/master/notebooks/prepare%20dataset.ipynb) and the [`notebooks/label_mapping.ipynb`](https://github.com/GiorgosKarantonis/Github-Issues-Classifier/blob/master/notebooks/label_mapping.ipynb) notebooks to get an idea how I deal with these issues and how the paraphrase detection component is incorporated to the classifier. 
+
 Training, validation and testing, use a **uniform** sample of the original dataset containing a total of 90k examples for each one of the classes plus all the examples that correspond to combinations of classes. This is just a small fraction of the full dataset, but thanks to the nature of fine-tuning it's enough to achieve great performance. 
 
-If you want to create your own version or see in detail how I created mine you may have a look at the [`notebooks/prepare_dataset.ipynb`](https://github.com/GiorgosKarantonis/Github-Issues-Classifier/blob/master/notebooks/prepare%20dataset.ipynb) notebook. 
+If you want to create your own version or see in detail how I created mine have a look at the [`notebooks/prepare_dataset.ipynb`](https://github.com/GiorgosKarantonis/Github-Issues-Classifier/blob/master/notebooks/prepare%20dataset.ipynb) notebook. 
 
 
 ## The Model(s)
-**There are two models that can be used for predictions**; one is the RoBERTA base model fine-tuned on the issues' dataset for multilabel classification and the other one is the same with a, small, additional head. 
+**There are two models that can be used for predictions**; one is the RoBERTa base model fine-tuned on the issues' dataset for multilabel classification and the other one is the same with a, small, additional head. 
 
-The second model passes to the network the title and the body of the issue separately and their respective scores, along with the score of their combination, are fed to the additional head. The idea behind this approach is that it allows to not only polarize the output scores but to also weight differently the titles and the bodies; for example the title of a specific issue may be a great indicator of its label while the body may be noisy and disorienting so if they are weighted the same useful information may be lost. 
+The second model passes to the network the title and the body of the issue separately and their respective scores, along with the score of their combination, are fed to the additional head. The idea behind this approach is that it allows to not only polarize the output scores but to also weight differently the titles and the bodies; for example the title of a specific issue may be a great indicator of its label while the body may be noisy and disorienting so if they are weighted the same useful information may be lost. Additionally, the way I have trained it provides an additional solution to the imbalance issue. 
 
-Additionally, the way I have trained it provides an additional solution to the imbalance issue. Another advantage of this module can be seen when working with smaller datasets. For example, when using 20k examples per class and just by setting the threshold for each class at *0.5*, the model with the additional head manages to achieve slightly better per class accuracy, better per class recall, about 8% higher exact match accuracy and more uniform scores across the classes. 
+Another advantage of this module can be seen when working with smaller datasets. For example, when using 20k examples per class and just by setting the threshold for each class at *0.5*, the model with the additional head manages to achieve slightly better per class accuracy, better per class recall, about 8% higher exact match accuracy and more uniform scores across the classes, compared to the model without the extra head. 
 
-The outputs of both models are the, independent, probabilities of each class so that you can define the thresholds yourself depending on the metric that you want to optimize. Refer to the [`notebooks/stats.ipynb`](https://github.com/GiorgosKarantonis/Github-Issues-Classifier/blob/master/notebooks/stats.ipynb) for a more detailed report of the various scores. 
+The outputs of both models are the independent probabilities of each class so that you can define the thresholds yourself depending on the metric that you want to optimize. Refer to the [`notebooks/stats.ipynb`](https://github.com/GiorgosKarantonis/Github-Issues-Classifier/blob/master/notebooks/stats.ipynb) for a more detailed report of the various scores. 
 
 Finally, **my implementation also allows you to create and train your own heads just by defining a list of PyTorch layers**; see the [`notebooks/train_custom_head.ipynb`](https://github.com/GiorgosKarantonis/Github-Issues-Classifier/blob/master/notebooks/train_custom_head.ipynb) for more details and a more thorough explanation of the way this head is trained and when you should activate it.
 
@@ -44,7 +46,7 @@ In order to make predictions simply do:
 bot = models.Bot()  # the additional head is deactivated by default; if you want to use it just pass use_head=True
 scores = bot.predict(title=some_title, body=some_body)  # the inputs can be a single string, a list of strings, a pd.Series object or a pd.DataFrame object
 ```
-Additionally, you can use the `app.py` endpoint to use the classifier's command line interface. 
+Additionally, you can use the `app.py` endpoint to use the classifier's command line interface which also allows you to also deploy the classifier to your or your organization's repos. 
 
 You may also have a look at the [`notebooks/predict.ipynb`](https://github.com/GiorgosKarantonis/Github-Issues-Classifier/blob/master/notebooks/predict.ipynb) file for a few examples on real issues. 
 
