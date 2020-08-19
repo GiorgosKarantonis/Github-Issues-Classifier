@@ -5,6 +5,7 @@ import json
 import sys
 import click
 
+import pandas as pd
 from github import Github
 
 from label_bot import models
@@ -12,12 +13,12 @@ from label_bot import models
 
 
 def init_models(ctx, param, value):
-    global bot
+    global BOT
 
     if not value or ctx.resilient_parsing:
-        bot = models.Bot(use_head=False)
+        BOT = models.Bot(use_head=False)
     else:
-        bot = models.Bot(use_head=True)
+        BOT = models.Bot(use_head=True)
 
 
 @click.group()
@@ -34,12 +35,14 @@ def get_token(file="token.json"):
 
 
 def predict(title, body):
-    return bot.predict(title, body)[0]
+    return BOT.predict(title, body)[0]
 
 
 @cli.command("crawl-organization")
 @click.option("--organization", "-O")
 def run_on_org(organization):
+    results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
+
     token = get_token()
     g = Github(token)
 
@@ -48,7 +51,12 @@ def run_on_org(organization):
     for repo in root.get_repos():
         for issue in repo.get_issues():
             b_score, q_score, e_score = predict(issue.title, issue.body)
-            results.append([repo.name, issue.number, b_score, q_score, e_score])
+            results = results.append({"repo" : repo.name,
+                                      "issue" : issue.number,
+                                      "bug" : b_score,
+                                      "question" : q_score,
+                                      "enhancement" : e_score
+                                    }, ignore_index=True)
 
     return results
 
@@ -56,7 +64,7 @@ def run_on_org(organization):
 @cli.command("crawl-user")
 @click.option("--user", "-U")
 def run_on_user(user):
-    results = []
+    results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
     token = get_token()
     g = Github(token)
@@ -66,7 +74,12 @@ def run_on_user(user):
     for repo in root.get_repos():
         for issue in repo.get_issues():
             b_score, q_score, e_score = predict(issue.title, issue.body)
-            results.append([repo.name, issue.number, b_score, q_score, e_score])
+            results = results.append({"repo" : repo.name,
+                                      "issue" : issue.number,
+                                      "bug" : b_score,
+                                      "question" : q_score,
+                                      "enhancement" : e_score
+                                    }, ignore_index=True)
 
     return results
 
@@ -74,7 +87,7 @@ def run_on_user(user):
 @cli.command("crawl-repo")
 @click.option("--repo", "-R")
 def run_on_repo(repo):
-    results = []
+    results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
     token = get_token()
     g = Github(token)
@@ -83,7 +96,12 @@ def run_on_repo(repo):
 
     for issue in repo.get_issues():
         b_score, q_score, e_score = predict(issue.title, issue.body)
-        results.append([repo.name, issue.number, b_score, q_score, e_score])
+        results = results.append({"repo" : repo.name,
+                                  "issue" : issue.number,
+                                  "bug" : b_score,
+                                  "question" : q_score,
+                                  "enhancement" : e_score
+                                }, ignore_index=True)
 
     return results
 
@@ -92,7 +110,7 @@ def run_on_repo(repo):
 @click.option("--repo", "-R")
 @click.option("--issue", "-I")
 def run_on_issue(repo, issue):
-    results = []
+    results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
     token = get_token()
     g = Github(token)
@@ -101,7 +119,12 @@ def run_on_issue(repo, issue):
     issue = repo.get_issue(number=issue)
 
     b_score, q_score, e_score = predict(issue.title, issue.body)
-    results.append([repo.name, issue.number, b_score, q_score, e_score])
+    results = results.append({"repo" : repo.name,
+                              "issue" : issue.number,
+                              "bug" : b_score,
+                              "question" : q_score,
+                              "enhancement" : e_score
+                            }, ignore_index=True)
 
     return results
 
