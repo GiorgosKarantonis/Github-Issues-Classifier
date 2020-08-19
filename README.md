@@ -58,7 +58,7 @@ If you are interested in improving the performance of the classifier, I would re
 
 * **Train on more data.** I ran into RAM issues with the tokenizers but if you have more than 8Gb of RAM or you find a workaround I believe you can significantly boost the performance just by using more data. 
 
-* **Use the RoBERTa large instead of the base version.**
+* **Use the RoBERTa large.** Instead of the base version.
 
 * **Noise reduction in the bodies using summarization.** I experimented with this using [BART](https://arxiv.org/abs/1910.13461), but I ran into several bugs. If you plan on working on the summarization, I would advice you to use [T5's](https://arxiv.org/abs/1910.10683) [tensorflow version](https://huggingface.co/transformers/model_doc/t5.html#tft5forconditionalgeneration). 
 
