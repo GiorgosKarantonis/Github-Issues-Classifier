@@ -3,7 +3,7 @@
 ## Introduction
 **This multilabel classifier can predict any combination of *bug*, *question* and *enhancement*, using [RoBERTa](https://arxiv.org/abs/1907.11692), one of the best performing NLP models**. Additionally, the predefined set of labels can be easily extended to almost any set of labels thanks to the incorporated paraphrase detection component; you can simply specify their desired labels and use this component to map them to actual labels in the dataset. Finally, it is completely straightforward to define your own aliases for each one of the predefined labels by mapping the output probabilities to the labels of your choice. 
 
-As far as I know is the best performing implementation on this task 🚀. 
+As far as I know is the best performing implementation on this task. 🚀
 
 
 ![demo](https://github.com/GiorgosKarantonis/images/blob/master/label_bot/demo.gif)
@@ -56,7 +56,7 @@ You may also have a look at the [`notebooks/predict.ipynb`](https://github.com/G
 ## Potential Improvements
 If you are interested in improving the performance of the classifier, I would recommend considering the following: 
 
-* **Train on more data.** I ran into RAM issues with the tokenizers but if you have more than 8Gb of RAM or you find a workaround I believe you can significantly boost the performance by using more data. 
+* **Train on more data.** I ran into RAM issues with the tokenizers but if you have more than 8Gb of RAM or you find a workaround I believe you can significantly boost the performance just by using more data. 
 
 * **Noise reduction in the bodies using summarization.** I experimented with this using [BART](https://arxiv.org/abs/1910.13461), but I ran into several bugs. If you plan on working on the summarization, I would advice you to use [T5's](https://arxiv.org/abs/1910.10683) [tensorflow version](https://huggingface.co/transformers/model_doc/t5.html#tft5forconditionalgeneration). 
 
