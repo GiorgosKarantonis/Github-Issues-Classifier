@@ -1,5 +1,6 @@
 .ipynb_checkpoints
 *.gif
+wandb/
 label_bot/extra_data/
 token_private.json
 *.pkl

@@ -129,25 +129,31 @@ def run_on_issue(repo, issue):
     return results
 
 
-@cli.command("demo")
 def demo():
     title = input("Title: ")
     body = input("Body: ")
 
-    b_score, q_score, e_score = predict(title, body)
+    scores = predict(title, body)
 
-    print(f"Bug: {b_score}")
-    print(f"Question: {q_score}")
-    print(f"Enhancement: {e_score}")
+    for kind, score in zip(("Bug", "Question", "Enhancement"), scores):
+        print(f"{kind}: {score}")
     print()
 
     keep_going = input("Try another one? [y/n] ")
 
-    assert keep_going in ["y", "n"]
+    while keep_going not in ("y", "n"):
+      print("Type 'y' for YES or 'n' for NO")
+      keep_going = input("Try another one? [y/n] ")
+
     if keep_going == "y":
         demo()
     else:
         sys.exit()
+
+
+@cli.command("demo")
+def start_demo():
+    demo()
 
 
 
