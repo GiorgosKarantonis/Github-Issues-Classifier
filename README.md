@@ -3,7 +3,7 @@
 ## Introduction
 **This multilabel classifier can predict any combination of *bug*, *question* and *enhancement*, using [RoBERTa](https://arxiv.org/abs/1907.11692), one of the best performing NLP models**. Additionally, the predefined set of labels can be easily extended to almost any set of labels thanks to the incorporated paraphrase detection component; you can simply specify their desired labels and use this component to map them to actual labels in the dataset. Finally, it is completely straightforward to define your own aliases for each one of the predefined labels by mapping the output probabilities to the labels of your choice. 
 
-As far as I know is the best performing implementation on this task 🚀. 
+As far as I know is the best performing implementation on this task. 🚀
 
 
 ![demo](https://github.com/GiorgosKarantonis/images/blob/master/label_bot/demo.gif)
@@ -12,7 +12,7 @@ As far as I know is the best performing implementation on this task 🚀.
 ## Performance
 The original dataset is highly imbalanced which means that a classifier may look good just by learning to predict well the most probable label(s). Such an example is the, otherwise great, [Issue Label Bot](https://github.com/machine-learning-apps/Issue-Label-Bot) which *performs multiclass classification* and achieves a high overall accuracy due to the fact that it has a good accuracy on the two classes that dominate the dataset. If we assumed a uniform distribution of the labels (and also that the performance of the classifier wouldn't change) the overall accuracy would drop ~10%! 
 
-My implementation manages to completely overcome this issue and **achieves equally high scores for all the distinct labels while extending the capabilities of the classifier to multilabel predictions**! More specifically, the average per label **accuracy is approximately 15% higher**, while the multilabel exact match accuracy is approximately 5% higher than the multiclass accuracy of the Issue Label Bot, **using only about 10% of the dataset** and without tweaking the decision threshold! 
+My implementation manages to completely overcome this issue and **achieves equally high scores for all the distinct labels while extending the capabilities of the classifier to multilabel predictions**! More specifically, the average per label **accuracy is approximately 15% higher**, while the multilabel exact match accuracy is approximately 5% higher than the multiclass accuracy of the Issue Label Bot, **using only about 9% of the dataset** and without tweaking the decision threshold! 
 
 You can have a look at the [`notebooks/stats.ipynb`](https://github.com/GiorgosKarantonis/Github-Issues-Classifier/blob/master/notebooks/stats.ipynb) notebook for a detailed performance report on various different metrics. 
 
@@ -56,7 +56,9 @@ You may also have a look at the [`notebooks/predict.ipynb`](https://github.com/G
 ## Potential Improvements
 If you are interested in improving the performance of the classifier, I would recommend considering the following: 
 
-* **Train on more data.** I ran into RAM issues with the tokenizers but if you have more than 8Gb of RAM or you find a workaround I believe you can significantly boost the performance by using more data. 
+* **Train on more data.** I ran into RAM issues with the tokenizers but if you have more than 8Gb of RAM or you find a workaround I believe you can significantly boost the performance just by using more data. 
+
+* **Use the RoBERTa large instead of the base version.**
 
 * **Noise reduction in the bodies using summarization.** I experimented with this using [BART](https://arxiv.org/abs/1910.13461), but I ran into several bugs. If you plan on working on the summarization, I would advice you to use [T5's](https://arxiv.org/abs/1910.10683) [tensorflow version](https://huggingface.co/transformers/model_doc/t5.html#tft5forconditionalgeneration). 
 
