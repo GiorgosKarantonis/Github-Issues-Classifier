@@ -3,6 +3,8 @@
 ## Introduction
 **This multilabel classifier can predict any combination of *bug*, *question* and *enhancement*, using [RoBERTa](https://arxiv.org/abs/1907.11692), one of the best performing NLP models**. Additionally, the predefined set of labels can be easily extended to almost any set of labels thanks to the incorporated paraphrase detection component; you can simply specify their desired labels and use this component to map them to actual labels in the dataset. Finally, it is completely straightforward to define your own aliases for each one of the predefined labels by mapping the output probabilities to the labels of your choice. 
 
+Utilizing the `app.py` endpoint, that uses the GitHub API, you can run this classifier to your personal or your organization's repos automating your operations. 
+
 As far as I know is the best performing implementation on this task. 🚀
 
 
