@@ -12,7 +12,7 @@ As far as I know this is the best performing implementation on this task. 🚀
 
 <p align="center">
   <a href="#">
-    <img src="https://github.com/GiorgosKarantonis/images/blob/master/label_bot/demo.gif" width="90%">
+    <img src="https://github.com/GiorgosKarantonis/images/blob/master/label_bot/demo.gif" width="100%">
   </a>
 </p>
 
