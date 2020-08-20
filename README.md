@@ -1,6 +1,6 @@
 # Predicting Issues' Labels with RoBERTa
 
-Many thanks to Red Hat's <a href="#"><img src="https://github.com/GiorgosKarantonis/images/blob/master/label_bot/red%20hat.png" width="21"></a> AICoE **[Thoth Team](https://github.com/thoth-station)** for giving me the opportunity to create this model while interning there! 
+Many thanks to Red Hat's <a href="javascript:;"><img src="https://github.com/GiorgosKarantonis/images/blob/master/label_bot/red%20hat.png" width="21"></a> AICoE **[Thoth Team](https://github.com/thoth-station)** for giving me the opportunity to create this model while interning there! 
 **Thoth is a group of *amazing* people that use Artificial Intelligence to create cool tools that make the lives of developers easier.**
 
 ## Introduction
@@ -11,7 +11,7 @@ Utilizing the `app.py` endpoint, that uses the GitHub API, you can run this clas
 As far as I know this is the best performing implementation on this task. 🚀
 
 <p align="center">
-  <a href="#">
+  <a href="javascript:;">
     <img src="https://github.com/GiorgosKarantonis/images/blob/master/label_bot/demo.gif" width="100%">
   </a>
 </p>
