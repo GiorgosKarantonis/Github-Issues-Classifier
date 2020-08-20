@@ -21,13 +21,21 @@ def init_models(ctx, param, value):
         BOT = models.Bot(use_head=True)
 
 
-@click.group()
-@click.option("--use-head", "-h", is_flag=True, callback=init_models, expose_value=False)
-def cli():
-    pass
+def set_token(ctx, param, value):
+    global token
+
+    if not value or ctx.resilient_parsing:
+        token = get_token()
+
+        if not token:
+            print("Exiting, no token found...")
+
+        return
+    
+    token = value
 
 
-def get_token(file="token.json"):
+def get_token(file="token_private.json"):
     with open(file) as f:
         token = json.load(f)["token"]
 
@@ -38,8 +46,22 @@ def predict(title, body):
     return BOT.predict(title, body)[0]
 
 
-@cli.command("crawl-organization")
-@click.option("--organization", "-O")
+@click.group()
+@click.option("--token", "-t", callback=set_token, expose_value=False)
+@click.option("--use-head", "-h", is_flag=True, callback=init_models, expose_value=False)
+@click.option("--threshold", "-th", default=.5, type=float)
+@click.option("--apply-labels", "-l", is_flag=True)
+def cli(threshold, apply_labels):
+    global THRESHOLD, APPLY_LABELS
+
+    THRESHOLD = threshold
+    APPLY_LABELS = apply_labels
+
+    pass
+
+
+@cli.command("crawl-org")
+@click.option("--organization", "-o")
 def run_on_org(organization):
     results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
@@ -51,6 +73,12 @@ def run_on_org(organization):
     for repo in root.get_repos():
         for issue in repo.get_issues():
             b_score, q_score, e_score = predict(issue.title, issue.body)
+            
+            if APPLY_LABELS:
+                for l, s in zip(("bug", "question", "enhancement"), (b_score, q_score, e_score)):
+                    if s >= THRESHOLD:
+                        issue.set_labels(l)
+            
             results = results.append({"repo" : repo.name,
                                       "issue" : issue.number,
                                       "bug" : b_score,
@@ -62,7 +90,7 @@ def run_on_org(organization):
 
 
 @cli.command("crawl-user")
-@click.option("--user", "-U")
+@click.option("--user", "-u")
 def run_on_user(user):
     results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
@@ -74,6 +102,12 @@ def run_on_user(user):
     for repo in root.get_repos():
         for issue in repo.get_issues():
             b_score, q_score, e_score = predict(issue.title, issue.body)
+
+            if APPLY_LABELS:
+                for l, s in zip(("bug", "question", "enhancement"), (b_score, q_score, e_score)):
+                    if s >= THRESHOLD:
+                        issue.set_labels(l)
+
             results = results.append({"repo" : repo.name,
                                       "issue" : issue.number,
                                       "bug" : b_score,
@@ -85,7 +119,7 @@ def run_on_user(user):
 
 
 @cli.command("crawl-repo")
-@click.option("--repo", "-R")
+@click.option("--repo", "-r")
 def run_on_repo(repo):
     results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
@@ -96,6 +130,12 @@ def run_on_repo(repo):
 
     for issue in repo.get_issues():
         b_score, q_score, e_score = predict(issue.title, issue.body)
+
+        if APPLY_LABELS:
+            for l, s in zip(("bug", "question", "enhancement"), (b_score, q_score, e_score)):
+                if s >= THRESHOLD:
+                    issue.set_labels(l)
+        
         results = results.append({"repo" : repo.name,
                                   "issue" : issue.number,
                                   "bug" : b_score,
@@ -107,8 +147,8 @@ def run_on_repo(repo):
 
 
 @cli.command("crawl-issue")
-@click.option("--repo", "-R")
-@click.option("--issue", "-I")
+@click.option("--repo", "-r")
+@click.option("--issue", "-i")
 def run_on_issue(repo, issue):
     results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
@@ -119,6 +159,12 @@ def run_on_issue(repo, issue):
     issue = repo.get_issue(number=issue)
 
     b_score, q_score, e_score = predict(issue.title, issue.body)
+
+    if APPLY_LABELS:
+        for l, s in zip(("bug", "question", "enhancement"), (b_score, q_score, e_score)):
+            if s >= THRESHOLD:
+                issue.set_labels(l)
+
     results = results.append({"repo" : repo.name,
                               "issue" : issue.number,
                               "bug" : b_score,
