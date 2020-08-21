@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+'''
+    A set of utility functions.
+'''
+
 import os
 os.environ['WANDB_SILENT'] = 'true'
 
@@ -32,6 +36,9 @@ from simpletransformers.classification import MultiLabelClassificationModel
 
 
 def get_model_stats(y_true, model_outputs, b_thres=.5, q_thres=.5, e_thres=.5, plot_roc=True):
+    '''
+        Gets the performance statistics of a model based on its outputs and the ground truth.
+    '''
     b_scores, q_scores, e_scores = model_outputs[:, 0], model_outputs[:, 1], model_outputs[:, 2]
     b_true, q_true, e_true = y_true[:, 0], y_true[:, 1], y_true[:, 2]
 
@@ -88,6 +95,9 @@ def get_model_stats(y_true, model_outputs, b_thres=.5, q_thres=.5, e_thres=.5, p
 
 
 def load_model(args, task='mlc', name='roberta', from_path='roberta-base'):
+    '''
+        Loads a pre-trained PyTorch model.
+    '''
     if task == 'mlm':
         return LanguageModelingModel(name, 
                                      from_path, 
@@ -102,6 +112,9 @@ def load_model(args, task='mlc', name='roberta', from_path='roberta-base'):
 
 
 def load_models_meta():
+    '''
+        Loads the metadata of a trained PyTorch model.
+    '''
     with open('models.json') as json_file: 
         models_meta = json.load(json_file)
 
@@ -109,16 +122,25 @@ def load_models_meta():
 
 
 def get_n_chunks(df, chunk_size):
+    '''
+        Returns the number of batches that a dataset can be split to given the batch size.
+    '''
     df_size = len(df)
 
     return int(df_size / chunk_size) if df_size % chunk_size == 0 else int(df_size / chunk_size) + 1
 
 
 def get_unique_values(df, feature):
+    '''
+        Returns only the unique values of a specific feature of a dataframe.
+    '''
     return df.explode(feature)[feature].value_counts()
 
 
 def df_to_txt(df, return_text=False, save=True, path='./', name='text', extension='txt'):
+    '''
+        Converts the title and body features of a dataframe to a text file.
+    '''
     text = ''
     
     for i in range(len(df)):
@@ -142,7 +164,11 @@ def split_to_classes(df,
                      to_keep=['title', 'body', 'label_bug', 'label_question', 'label_enhancement'], 
                      save=False, 
                      path='./'):
-
+    '''
+        Split the dataset to several smaller ones,
+        where each one of them contains only a specific class
+        or all the examples that fall into a combination of classes.
+    '''
     if to_keep:
         df = df[to_keep]
 
@@ -176,6 +202,9 @@ def split_to_classes(df,
 
 
 def get_labels_stats(df):
+    '''
+        Gets statistics for each one of the labels.
+    '''
     total = len(df)
 
     # all the examples that are labelled
@@ -235,6 +264,16 @@ def sample_df(df,
               n=None, 
               frac=None, 
               to_keep=['title', 'body', 'label_bug', 'label_question', 'label_enhancement']):
+    '''
+        Performs sampling over the dataset.
+
+        args :
+            df      : the dataset.
+            n       : the absolute number of examples that are going to be kept.
+            fract   : the fraction of examples that it going to be kept;
+                      it has to be mutually exclusive with the n argument.
+            to_keep : the columns to keep in the datasets.
+    '''
     assert n != frac
     bugs_df, questions_df, enhancements_df, combinations_df = split_to_classes(df, to_keep)
 
@@ -265,6 +304,9 @@ def split_train_test(df,
                      path='./', 
                      name='', 
                      to_keep=None):
+    '''
+        Splits the dataset to train, test and validation sets.
+    '''
     if shuffle:
         df = df.sample(frac=1)
 
@@ -299,6 +341,10 @@ def split_train_test(df,
 
 
 def make_st_compatible(df):
+    '''
+        Converts the labels column to a format 
+        compatible to the simple transformers library.
+    '''
     df['labels'] = list(zip(df.label_bug.tolist(), 
                             df.label_question.tolist(), 
                             df.label_enhancement.tolist()))

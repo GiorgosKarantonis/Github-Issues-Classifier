@@ -25,6 +25,9 @@ import paraphrase_detector
 
 
 def download_data(memory_limit=None, save=True, base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
+    '''
+        Downloads the raw dataset.
+    '''
     print('Downloading Dataset...\n')
 
     df = pd.concat([pd.read_csv(f'{base_url}{i}.csv.gz') for i in range(10)])[:memory_limit]
@@ -36,6 +39,9 @@ def download_data(memory_limit=None, save=True, base_url='https://storage.google
 
 
 def drop_columns(df, *columns):
+    '''
+        Drops specific columns from a dataframe.
+    '''
     print('Removing Redundant Columns...\n')
 
     for c in columns:
@@ -49,6 +55,9 @@ def drop_columns(df, *columns):
 
 
 def clean_labels(labels):
+    '''
+        Cleans the labels columns of the raw dataset.
+    '''
     print('Cleaning Labels...\n')
 
     labels_fixed = []
@@ -70,6 +79,9 @@ def clean_labels(labels):
 
 
 def get_reference_info(df):
+    '''
+        Gets the repo and the owner of the repo for each issue.
+    '''
     print('Getting Issue Info...\n')
 
     reference_df = df['url'].str.extract(r'.*github\.com/(?P<user>.+)/(?P<repo_name>.+)/issues/(?P<issue_number>\d+)')
@@ -80,6 +92,9 @@ def get_reference_info(df):
 
 
 def min_presence(df, feature='labels', p=.001):
+    '''
+        Drops examples that fall into classes that contain very few examples.
+    '''
     print('Filtering out Redundant Labels...\n')
 
     thresh = int(p * len(df))
@@ -91,6 +106,9 @@ def min_presence(df, feature='labels', p=.001):
 
 
 def vectorize(s, values, prefix=None):
+    '''
+        Gets the multi-hot embeddings for the labels.
+    '''
     print('Vectorizing Features...\n')
 
     series_length = len(s)
@@ -109,6 +127,9 @@ def vectorize(s, values, prefix=None):
 
 
 def clean_text_data(df, *features):
+    '''
+        Removes the string literal prefix from the bodies and the titles.
+    '''
     print('Cleaning Text Data...\n')
 
     for feature in features:
@@ -119,6 +140,9 @@ def clean_text_data(df, *features):
 
 
 def transform(df, **kwargs):
+    '''
+        Adds and removes certain columns from the dataframe.
+    '''
     print('Transforming DataFrame...\n')
 
     try:
@@ -139,6 +163,9 @@ def transform(df, **kwargs):
 
 
 def preprocess(df, save=True, save_to='data/github.pkl'):
+    '''
+        The main function for the preprocessing of the dataset.
+    '''
     df['url'] = df['url'].str.replace('"', '')
     
     df = get_reference_info(df)
@@ -161,6 +188,9 @@ def preprocess(df, save=True, save_to='data/github.pkl'):
 
 
 def fetch_github_data(look_for_downloaded=True, memory_limit=None, base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
+    '''
+        Either loads the raw dataset if its already downloaded or downloads it from scratch.
+    '''
     if look_for_downloaded:
         try:
             df = pd.read_pickle('data/github_raw.pkl')[:memory_limit]
@@ -173,6 +203,9 @@ def fetch_github_data(look_for_downloaded=True, memory_limit=None, base_url='htt
 
 
 def load_data(fetch=False, memory_limit=None, file='data/github.pkl', base_url='https://storage.googleapis.com/codenet/issue_labels/00000000000'):
+    '''
+        Loads the dataset.
+    '''
     return fetch_github_data(memory_limit=memory_limit, base_url=base_url) if fetch else pd.read_pickle(file)[:memory_limit]
 
 
@@ -180,6 +213,9 @@ def load_data(fetch=False, memory_limit=None, file='data/github.pkl', base_url='
 @click.option('--fetch', '-F', default=False, type=bool)
 @click.option('--limit', '-L', default=None, type=int)
 def cli(fetch, limit):
+    '''
+        A CLI tool for the preprocessing of the dataset.
+    '''
     if not os.path.exists('data'):
         os.mkdir('data')
 

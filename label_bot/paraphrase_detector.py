@@ -14,11 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+'''
+    The paraphrase detection component.
+'''
+
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['WANDB_SILENT'] = 'true'
 
-import time
 import json
 import click
 import logging
@@ -37,6 +40,15 @@ logging.getLogger('transformers').setLevel(logging.ERROR)
 
 
 def clean_labels(labels):
+    '''
+        Cleans the labels observed in the dataset.
+
+        args :
+            labels : a pd.Series object of the observed labels.
+
+        returns :
+            labels_fixed : the cleaned labels cast as a pd.Series object.
+    '''
     print('Cleaning Labels...\n')
 
     labels_fixed = []
@@ -58,6 +70,15 @@ def clean_labels(labels):
 
 
 def get_target_labels():
+    '''
+        Gets the target labels and their aliases.
+
+        returns :
+            aliases       : all the aliases of the target labels
+                            that will be used during the clustering.
+            target_labels : the unique target labels.
+            label_mapping : the rules of how to map the labels.
+    '''
     with open(os.path.join('..', 'labels.json')) as f:
         label_mapping = json.load(f)
 
@@ -68,6 +89,16 @@ def get_target_labels():
 
 
 def disambiguate_labels(labels_dict, disambiguate='keep_most_probable'):
+    '''
+        Deals with conflicts in the label mapping.
+
+        args :
+            labels_dict  : a dictionary containing the observed labels 
+                           and all their possible substitutions.
+            disambiguate : how to deal with conficts; 
+                           either keep only the most probable label, 
+                           or drop all of the possible labels.
+    '''
     print('Disambiguating Labels...\n')
 
     assert disambiguate in ['keep_most_probable', 'drop_all']
@@ -96,6 +127,18 @@ def disambiguate_labels(labels_dict, disambiguate='keep_most_probable'):
 
 
 def map_labels(label_series, mapping):
+    '''
+        Replaces the observed labels with their corresponding target ones.
+
+        args :
+            label_series : the pd.Series object containing the observed labels
+            mapping      : the mapping rule obtained my the get_mapping() function.
+
+        returns :
+            mapped_labels : a modified list of labels, such that the observed ones
+                            are mapped to their corresponding targets or to nothing, 
+                            cast as a pd.Series object.
+    '''
     print('Mappping Labels...\n')
 
     mapped_labels = []
@@ -118,6 +161,19 @@ def map_labels(label_series, mapping):
 
 
 def get_mapping(paraphrase_candidates, paraphrase_likelihood, threshold=.5):
+    '''
+        Finds the mapping of labels observed in the dataset to target labels.
+
+        args : 
+            paraphrase_candidates : combinations of target and observed labels.
+            paraphrase_likelihood : the probability, for each combination, 
+                                    of being a paraphrase.
+            threshold             : the minimum probability to consider a combination paraphrase.
+
+        returns :
+            label_mapping : a dictionary containing observed labels and their 
+                            corresponding target label.
+    '''
     label_mapping = {}
     
     for pair, pair_likelihood in zip(paraphrase_candidates, paraphrase_likelihood):
@@ -134,6 +190,16 @@ def get_mapping(paraphrase_candidates, paraphrase_likelihood, threshold=.5):
 
 
 def make_combinations(targets, observed):
+    '''
+        Creates combinations of target labels and observed ones.
+
+        args :
+            targets  : the target labels.
+            observed : the unique labels observed in the dataset.
+
+        returns :
+            combinations : the combinations of target and observed labels.
+    '''
     print('Creating Label Combinations...\n')
 
     combinations = []
@@ -146,6 +212,20 @@ def make_combinations(targets, observed):
 
 
 def check_paraphrase(inputs, low_memory=True, chunk_size=1000):
+    '''
+        Finds the likelihood of a combination of strings to be a paraphrase.
+
+        args :
+            inputs : a combination of strings.
+            low_memory : if you want to split the inputs
+                         to batches in order to avoid OOM issues.
+            chunk_size : the batch size in case low_memory is set to True.
+
+        returns :
+            paraphrase_likelihood : the probability, for each combination,
+                                    of being a paraphrase.
+
+    '''
     print('Checking for Paraphrase...\n') 
 
     tokenizer = BertTokenizer.from_pretrained('bert-base-cased-finetuned-mrpc', output_loading_info=False)
@@ -196,6 +276,17 @@ def check_paraphrase(inputs, low_memory=True, chunk_size=1000):
 
 
 def main(label_series):
+    '''
+        The main function that handles the alignment of the labels.
+
+        args :
+            label_series : a pd.Series object containing all the labels 
+                           as they are observed in the dataset.
+
+        returns :
+            label_series  : a pd.Series object containing the mapped labels.
+            target_labels : a set containing all the unique target labels.
+    '''
     global LABELS
     aliases, target_labels, LABELS = get_target_labels()
 
@@ -219,6 +310,9 @@ def main(label_series):
 @click.option('--limit', '-L', default=None, type=int)
 @click.option('--file', '-F', default='data/github_raw.pkl', type=str)
 def cli(limit, file):
+    '''
+        A CLI tool for the paraphrase detection component.
+    '''
     label_series = pd.read_pickle(file)['labels'][:limit]
     label_series, LABELS = main(label_series)
 
