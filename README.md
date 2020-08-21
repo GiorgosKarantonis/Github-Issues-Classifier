@@ -1,14 +1,20 @@
 # Predicting Issues' Labels with RoBERTa
 
+Many thanks to Red Hat's <a href="#"><img src="https://github.com/GiorgosKarantonis/images/blob/master/label_bot/red%20hat.png" width="21"></a> AICoE **[Thoth Team](https://github.com/thoth-station)** for giving me the opportunity to create this model while interning there! 
+**Thoth is a group of *amazing* people that use Artificial Intelligence to create cool tools that make the lives of developers easier.**
+
 ## Introduction
 **This multilabel classifier can predict any combination of *bug*, *question* and *enhancement*, using [RoBERTa](https://arxiv.org/abs/1907.11692), one of the best performing NLP models**. Additionally, the predefined set of labels can be easily extended to almost any set of labels thanks to the incorporated paraphrase detection component; you can simply specify their desired labels and use this component to map them to actual labels in the dataset. Finally, it is completely straightforward to define your own aliases for each one of the predefined labels by mapping the output probabilities to the labels of your choice. 
 
 Utilizing the `app.py` endpoint, that uses the GitHub API, you can run this classifier to your personal or your organization's repos automating your operations. 
 
-As far as I know is the best performing implementation on this task. 🚀
+As far as I know this is the best performing implementation on this task. 🚀
 
-
-![demo](https://github.com/GiorgosKarantonis/images/blob/master/label_bot/demo.gif)
+<p align="center">
+  <a href="#">
+    <img src="https://github.com/GiorgosKarantonis/images/blob/master/label_bot/demo.gif" width="100%">
+  </a>
+</p>
 
 
 ## Performance
@@ -40,7 +46,7 @@ Finally, **my implementation also allows you to create and train your own heads 
 
 
 ## Using the classifier
-If you want to use my pre-trained models for predictions, make sure to download the pre-trained models using the `fetch_models.sh` script, but obviously you can fine-tune the models on your own datasets as well even if you have a small train set; I was able to achieve good performance even with a total of 5,000 examples. 
+If you want to use my pre-trained models for predictions, make sure to download them using the `fetch_models.sh` script, but obviously you can fine-tune the models on your own datasets as well even if you have a small train set; I was able to achieve good performance even with a total of 5,000 examples. 
 
 Also, you can manage all the dependencies using the provided Pipfile. 
 
@@ -62,7 +68,7 @@ If you are interested in improving the performance of the classifier, I would re
 
 * **Use the RoBERTa large.** Instead of the base version.
 
-* **Noise reduction in the bodies using summarization.** I experimented with this using [BART](https://arxiv.org/abs/1910.13461), but I ran into several bugs. If you plan on working on the summarization, I would advice you to use [T5's](https://arxiv.org/abs/1910.10683) [tensorflow version](https://huggingface.co/transformers/model_doc/t5.html#tft5forconditionalgeneration). 
+* **Noise reduction in the bodies using summarization.** I experimented with this using [BART](https://arxiv.org/abs/1910.13461), but I ran into several bugs. If you plan on working on the summarization, I would advice you to use [T5](https://arxiv.org/abs/1910.10683)'s [tensorflow version](https://huggingface.co/transformers/model_doc/t5.html#tft5forconditionalgeneration). 
 
 * **Fine-tune a language model first.** It's unfair to think of GitHub issues as regular text due to the fact that they are usually a hybrid between real text, code and logs etc. So fine-tuning a language model on this dataset and then fine-tuning this language model on classification could yield good results. In the `demos/prepare_dataset.ipynb` file you can find a sampling method that ensures that the examples used in the language model will be different than the ones used in the classification task. 
 
