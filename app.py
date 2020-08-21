@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+'''
+    A CLI tool for the classifier.
+'''
+
 import os
 os.environ["WANDB_SILENT"] = "true"
 
@@ -29,6 +33,9 @@ from label_bot import models
 
 
 def init_models(ctx, param, value):
+    '''
+        Initializes the trained model.
+    '''
     global BOT
 
     if not value or ctx.resilient_parsing:
@@ -38,6 +45,9 @@ def init_models(ctx, param, value):
 
 
 def set_token(ctx, param, value):
+    '''
+        Pass the token as a CLI argument.
+    '''
     global token
 
     if not value or ctx.resilient_parsing:
@@ -51,7 +61,11 @@ def set_token(ctx, param, value):
     token = value
 
 
-def get_token(file="token_private.json"):
+def get_token(file="token.json"):
+    '''
+        Finds and the returns the personal access token
+        from the ./token.json file.
+    '''
     with open(file) as f:
         token = json.load(f)["token"]
 
@@ -59,6 +73,13 @@ def get_token(file="token_private.json"):
 
 
 def predict(title, body):
+    '''
+        Returns the prediction scores.
+
+        args:
+            title : the titles of the issues.
+            body  : the bodies of the issues.
+    '''
     return BOT.predict(title, body)[0]
 
 
@@ -68,6 +89,13 @@ def predict(title, body):
 @click.option("--threshold", "-th", default=.5, type=float)
 @click.option("--apply-labels", "-l", is_flag=True)
 def cli(threshold, apply_labels):
+    '''
+        The CLI tool for the classifier.
+
+        args:
+            threshold    : the decision threshold.
+            apply_labels : whether or not to set the labels on all the visited issues.
+    '''
     global THRESHOLD, APPLY_LABELS
 
     THRESHOLD = threshold
@@ -79,6 +107,13 @@ def cli(threshold, apply_labels):
 @cli.command("crawl-org")
 @click.option("--organization", "-o")
 def run_on_org(organization):
+    '''
+        Runs the classifier on all the issues 
+        opened on all the repos of a certain organization.
+
+        args:
+            organization : the organization.
+    '''
     results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
     token = get_token()
@@ -108,6 +143,13 @@ def run_on_org(organization):
 @cli.command("crawl-user")
 @click.option("--user", "-u")
 def run_on_user(user):
+    '''
+        Runs the classifier on all the issues 
+        opened on all the repos of a certain user.
+
+        args:
+            user : the user.
+    '''
     results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
     token = get_token()
@@ -137,6 +179,12 @@ def run_on_user(user):
 @cli.command("crawl-repo")
 @click.option("--repo", "-r")
 def run_on_repo(repo):
+    '''
+        Runs the classifier on all the issues of a specific repo.
+
+        args:
+            repo : the repo name.
+    '''
     results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
     token = get_token()
@@ -166,6 +214,13 @@ def run_on_repo(repo):
 @click.option("--repo", "-r")
 @click.option("--issue", "-i")
 def run_on_issue(repo, issue):
+    '''
+        Runs the classifier on a specific issue.
+
+        args:
+            repo  : the repo where the issue is opened.
+            issue : the issue number.
+    '''
     results = pd.DataFrame(columns=["repo", "issue", "bug", "question", "enhancement"])
 
     token = get_token()
@@ -192,6 +247,9 @@ def run_on_issue(repo, issue):
 
 
 def demo():
+    '''
+        A simple demo function.
+    '''
     title = input("Title: ")
     body = input("Body: ")
 
